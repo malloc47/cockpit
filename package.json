@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@material-ui/core": "^4.9.13",
     "highlight.js": "9.18.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",

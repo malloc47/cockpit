@@ -1,4 +1,4 @@
 (ns cockpit.db)
 
 (def default-db
-  {:name "re-frame"})
+  {:time (js/Date.)})
