@@ -2,4 +2,6 @@
                 "karma"                 "4.4.1"
                 "karma-chrome-launcher" "3.1.0"
                 "karma-cljs-test"       "0.1.0"
-                "karma-junit-reporter"  "2.0.1"}}
+                "karma-junit-reporter"  "2.0.1"
+                "@material-ui/core"     "^4.9.13"
+                "react-sparklines"      "^1.7.0"}}

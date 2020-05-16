@@ -7,7 +7,12 @@
                  [thheller/shadow-cljs "2.8.109"]
                  [reagent "0.10.0"]
                  [re-frame "0.12.0"]
-                 [day8.re-frame/tracing "0.5.5"]]
+                 [day8.re-frame/tracing "0.5.5"]
+                 [day8.re-frame/http-fx "v0.2.0"]
+                 [clojusc/protobuf "3.6.0-v1.2-SNAPSHOT"]
+                 [com.andrewmcveigh/cljs-time "0.5.2"]
+                 [clj-http "3.10.1"]
+                 [re-pollsive "0.1.0"]]
 
   :plugins [[lein-shadow "0.1.7"]
             [lein-shell "0.5.0"]]
