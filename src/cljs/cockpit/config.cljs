@@ -8,3 +8,6 @@
 
 (def alpha-vantage-api-key
   "")
+
+(def lat 1)
+(def lon 1)

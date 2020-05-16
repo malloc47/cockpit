@@ -6,7 +6,8 @@
    [cockpit.events :as events]
    [cockpit.views :as views]
    [cockpit.config :as config]
-   ))
+   [cockpit.polling :as poll-config]
+   [re-pollsive.core :as poll]))
 
 
 (defn dev-setup []
@@ -21,5 +22,7 @@
 
 (defn init []
   (re-frame/dispatch-sync [::events/initialize-db])
+  (re-frame/dispatch-sync [::poll/init])
+  (re-frame/dispatch [::poll/set-rules poll-config/rules])
   (dev-setup)
   (mount-root))

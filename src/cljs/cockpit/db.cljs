@@ -1,4 +1,6 @@
 (ns cockpit.db)
 
 (def default-db
-  {:time (js/Date.)})
+  {:time (js/Date.)
+   :stocks {}
+   :weather {}})
