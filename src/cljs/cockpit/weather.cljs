@@ -19,3 +19,18 @@
                                     day-lookup
                                     night-lookup))]
     (get lookup icon-id "day-sunny")))
+
+(defn id->icon
+  "Assumes day icon since the sunrise/sunset is not included."
+  [icon-id]
+  (get (merge base-lookup day-lookup) icon-id "day-sunny"))
+
+
+(defn number->weekday
+  [n]
+  (let [lookup {0 "Sun" 1 "Mon" 2 "Tue" 3 "Wed" 4 "Thu" 5 "Fri" 6 "Sat"}]
+    (get lookup n "Ukn")))
+
+(defn mm->in
+  [mm]
+  (* mm 0.0393701))

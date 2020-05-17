@@ -2,15 +2,19 @@
   (:require
    [re-frame.core :as re-frame]
    [cockpit.subs :as subs]
-   [cockpit.weather :as weather]
+   [cockpit.weather :as weather :refer [mm->in]]
    [goog.string :as gstring]
    ["@material-ui/core" :refer [Button Card CardActionArea CardActions
                                 CardContent CardMedia Container Grid
                                 CssBaseline Paper Typography ThemeProvider]]
    ["react-sparklines" :refer [Sparklines SparklinesLine SparklinesReferenceLine dataProcessing]]
    ["@material-ui/core/styles" :refer [makeStyles]]
+   ["@material-ui/core/colors/green" :default green]
+   ["@material-ui/core/colors/lightBlue" :default lightBlue]
    [clojure.string :as str]))
 
+(def color-scheme (js->clj green))
+(def accent-scheme (js->clj lightBlue))
 
 (defn clock []
   [:> Card {:style {:height "100%"}}
@@ -18,7 +22,32 @@
     [:> Typography {:align "center" :variant "h1" :style {:font-size "6vw"}}
      @(re-frame/subscribe [::subs/time])]
     [:> Typography {:align "center" :variant "h2" :style {:font-size "3vw"}}
-     @(re-frame/subscribe [::subs/day])]]])
+     @(re-frame/subscribe [::subs/day])]
+    [:> Grid {:container true :spacing 0 :direction "row"
+              :justify "center" :alignItems "center"}
+     [:> Grid {:item true :xs 6}
+      [:> Typography {:align "center" :variant "h3"
+                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+       @(re-frame/subscribe [::subs/time-pt])]
+      [:> Typography {:align "center" :variant "h3" :color "textSecondary"
+                      :style {:font-size "1vw" :margin-top "0.5em"}}
+        "San Francisco"]]
+     [:> Grid {:item true :xs 6}
+      [:> Typography {:align "center" :variant "h3"
+                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+       @(re-frame/subscribe [::subs/time-ct])]
+      [:> Typography {:align "center" :variant "h3" :color "textSecondary"
+                      :style {:font-size "1vw" :margin-top "0.5em"}}
+       "Chicago"]]]
+    (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::subs/sun])]
+      [:> Typography {:align "center"
+                      :variant "h3"
+                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+       [:i {:class (str "wi wi-sunrise") :style {:color (get accent-scheme "600")}}]
+       sunrise
+       (gstring/unescapeEntities "&#8194;")
+       [:i {:class (str "wi wi-sunset") :style {:color (get accent-scheme "600")}}]
+       sunset])]])
 
 (defn cute []
   [:> Card  {:style {:height "100%"}}
@@ -26,7 +55,9 @@
     [:> CardMedia
      {:image "https://icatcare.org/app/uploads/2018/07/Thinking-of-getting-a-cat.png"
       :style {:height "300px"}}]]
-   [:> CardContent "efghi"]])
+   [:> CardContent "A Cat."]])
+
+(def sparkline-height 50)
 
 (defn correct-reference-line
   "The 'custom' option for SparklinesReferenceLine is not wired through
@@ -38,59 +69,145 @@
   (let [top    (apply max data)
         bottom (apply min data)
         ref    (first data)]
-    (- 50 (* (/ (- ref bottom) (- top bottom)) 50))))
+    (- sparkline-height (* (/ (- ref bottom) (- top bottom)) sparkline-height))))
 
-(defn round-number
-   [f]
-  (/ (.round js/Math (* 100 f)) 100))
+(defn round
+  [num & [decimals]]
+  (let [base (->> (repeat 10) (take (or decimals 2)) (reduce *))]
+    (/ (.round js/Math (* base num)) base)))
 
 (defn stock-chart [symbol]
   (let [data         (clj->js (symbol @(re-frame/subscribe [::subs/stocks])))
-        diff         (round-number (- (last data) (first data)))
+        diff         (round (- (last data) (first data)))
         up?          (>= (last data) (first data))
         diff-display (str (if (>= diff 0) "+" "") diff)
-        percent      (round-number (* (- 1 (/ (first data) (last data))) 100))
+        percent      (round (* (- 1 (/ (first data) (last data))) 100))
         color        (if up? "green" "red")]
-    (if (> (count data) 1)
-      [:div
-       [:> Typography {:variant "body1"
-                       :display "inline"
-                       :style {:color "rgba(0, 0, 0, 0.62)"}}
-        (str (name symbol) " ")]
-       [:> Typography {:variant "h6"
-                       :display "inline"
-                       :style {:color "rgba(0, 0, 0, 0.87)"}}
-        (last data)]
-       [:> Typography {:variant "body1"
-                       :display "inline"
-                       :style {:color "rgba(0, 0, 0, 0.62)"}}
-        " USD "]
-       [:> Typography {:variant "body1"
-                       :display "inline"
-                       :style {:color color}}
-        (str diff-display " (" percent "%) " (if up? "▲" "▼"))]
-       [:> Sparklines {:data (or data []) :height 50 :margin 0}
-        [:> SparklinesLine {:color color}]
-        [:> SparklinesReferenceLine
-         {:type "custom" :value (correct-reference-line data)
-          :style {:stroke "black"
-                  :strokeOpacity 0.75
-                  :strokeDasharray "1, 3" }}]]]
-      [:div "This shouldn't happen"])))
+    [:div
+     [:> Typography {:variant "body1"
+                     :display "inline"
+                     :color "textSecondary"}
+      (name symbol) " "]
+     [:> Typography {:variant "h6"
+                     :display "inline"}
+      (last data)]
+     [:> Typography {:variant "body1"
+                     :display "inline"
+                     :color "textSecondary"}
+      " USD "]
+     [:> Typography {:variant "body1"
+                     :display "inline"
+                     :style {:color color}}
+      diff-display " (" percent "%) " (if up? "▲" "▼")]
+     [:> Sparklines {:data (or data []) :height sparkline-height :margin 0}
+      [:> SparklinesLine {:color color}]
+      [:> SparklinesReferenceLine
+       {:type "custom" :value (correct-reference-line data)
+        :style {:stroke "black"
+                :strokeOpacity 0.75
+                :strokeDasharray "1, 3" }}]]]))
 
 (defn weather [symbol]
   (let [weather @(re-frame/subscribe [::subs/weather])]
     [:div
      [:> Typography {:variant "h5"
-                     :display "inline"
-                     :style {:color "rgba(132, 132, 132)"}}
+                     :color "textSecondary"
+                     :style {:font-size "1.5vw"
+                             :margin-bottom "0.5em"}}
       "New York, NY"]
-     [:> Typography {:align "center" :variant "h1" :style {:font-size "6vw"}}
-      [:i {:class (str "wi wi-" (weather/request->icon weather))}]
-      (str " " (-> weather :current :temp int) "°")]
-     [:> Typography {:align "center" :display "block" :variant "h2" :style {:font-size "3vw"}}
-      (let [temps (-> weather :daily first :temp )]
-        (str (-> temps :min int) "°" (gstring/unescapeEntities "&#8194;") (-> temps :max int) "°"))]]))
+
+     [:> Grid {:container true :spacing 0 :direction "row"
+               :justify "center" :alignItems "center"}
+      [:> Grid {:item true :xs 3}
+       [:i {:class (str "wi wi-" (weather/request->icon weather))
+            :style {:color (get color-scheme "400")
+                    :font-size "5vw"}}]]
+      [:> Grid {:item true :xs 4 :style {:text-align "center"}}
+       [:> Typography {:align "center" :variant "h1"
+                       :display "inline"
+                       :style {:font-size "5vw" :margin-top "0.1em"}}
+        (-> weather :current :temp int) "°"]]
+      [:> Grid {:item true :xs 2}
+       (let [{low :min high :max} (-> weather :daily first :temp)]
+         [:> Typography {:align "left" :display "inline"
+                         :variant "h2" :style {:font-size "2vw"}}
+          (int high) "°"
+          [:br]
+          (int low) "°"])]
+
+      #_[:> Grid {:item true :xs 3}
+       (let [{:keys [morn day eve night]} (-> weather :daily first :temp)]
+         [:> Typography {:align "left" :display "inline"
+                         :variant "h2" :style {:font-size "1vw"}}
+          "Mor: " (int morn) "°"
+          [:br]
+          "Day: " (int day) "°"
+          [:br]
+          "Eve: " (int eve) "°"
+          [:br]
+          "Ngt: " (int night) "°"])]]
+
+     (let [humidity    (-> weather :current :humidity)
+           feels-like  (some-> weather :current :feels_like int)
+           description (some-> weather :current :weather first
+                               :description str/capitalize)
+           rain        (some-> weather :daily first :rain mm->in (round 1))
+           snow        (some-> weather :daily first :snow mm->in (round 1))]
+       (->> [{:content description :render? description}
+             {:prefix "Feels like "
+              :content [:span {:style {:color (get accent-scheme "600")}}
+                        feels-like "°"]
+              :render? true}
+             {:content [:span {:style {:color (get accent-scheme "600")}}
+                        humidity [:i {:class "wi wi-humidity"}]]
+              :render? true}
+             {:postfix " rain"
+              :content [:span {:style {:color (get accent-scheme "600")}} rain "\""]
+              :render? rain}
+             {:postfix " snow"
+              :content [:span {:style {:color "red"}} snow "\""]
+              :render? snow}]
+            (map (fn [{:keys [prefix postfix content render?]}]
+                   (if render?
+                     (->> [prefix content postfix] (remove nil?) vec)
+                     [])))
+            (remove empty?)
+            (interpose [" | "])
+            (apply concat [:> Typography {:align "center" :color "textSecondary"
+                                          :style {:font-size "1.1vw"}}])
+            vec))
+
+     [:> Grid {:container true :spacing 1 :direction "row"
+               :justify "center" :alignItems "flex-start"
+               :style {:margin-top "1em"}}
+      (map
+       (fn [{date                 :dt
+             {low :min high :max} :temp
+             rain                 :rain
+             snow                 :snow
+             [{icon-id :id} & _]  :weather}]
+         ^{:key date}
+         [:> Grid {:item true :xs 2}
+          [:> Typography {:key date
+                          :align "center"
+                          :style {:font-size "1vw"
+                                  :margin-bottom "0.5em"}}
+           (-> date subs/epoch->local-date .getWeekday weather/number->weekday)]
+          [:> Typography {:align "center"}
+           [:i {:class (str "wi wi-" (weather/id->icon icon-id))
+                :style {:font-size "2vw"
+                        :color (get accent-scheme "600")}}]]
+          [:> Typography {:align "center" :style {:font-size "1vw"}}
+           (int high) "°"
+           (gstring/unescapeEntities "&#8194;")
+           [:span {:style {:color "rgb(132, 132, 132)"}} (int low) "°"]
+           [:span {:style {:color (get accent-scheme "600")}}
+            (when rain
+              (list " " (some-> rain mm->in (round 1)) "\""))]
+           [:span {:style {:color "red"}}
+            (when snow
+              (list " " (some-> snow mm->in (round 1)) "\""))]]])
+       (->> weather :daily rest (take 6)))]]))
 
 (defn main-panel []
   [:> CssBaseline
@@ -102,11 +219,11 @@
        [:> CardContent [weather]]]]
 
      [:> Grid {:item true :xs 4} [clock]]
+
      [:> Grid {:item true :xs 4}
       [:> Card  {:style {:height "100%"}}
        [:> CardContent
         [stock-chart :UNH]
         [stock-chart :GRPN]]]]
-     [:> Grid {:item true :xs 4}
-      [:> Card {:style {:height "100%"}}
-       [:> CardContent "Empty"]]]]]])
+
+     [:> Grid {:item true :xs 4} [cute]]]]])
