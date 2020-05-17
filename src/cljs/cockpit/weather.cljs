@@ -34,3 +34,7 @@
 (defn mm->in
   [mm]
   (* mm 0.0393701))
+
+(defn open-weather-api-icon
+  [code]
+  (str "http://openweathermap.org/img/wn/" code "@2x.png"))

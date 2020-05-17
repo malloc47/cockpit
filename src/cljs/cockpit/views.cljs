@@ -121,7 +121,9 @@
       [:> Grid {:item true :xs 3}
        [:i {:class (str "wi wi-" (weather/request->icon weather))
             :style {:color (get color-scheme "400")
-                    :font-size "5vw"}}]]
+                    :font-size "5vw"}}]
+       #_[:img {:src (weather/open-weather-api-icon
+                    (-> weather :current :weather first :icon))}]]
       [:> Grid {:item true :xs 4 :style {:text-align "center"}}
        [:> Typography {:align "center" :variant "h1"
                        :display "inline"
@@ -210,20 +212,21 @@
        (->> weather :daily rest (take 6)))]]))
 
 (defn main-panel []
-  [:> CssBaseline
-   [:> Container {:maxWidth false}
-    [:> Grid {:container true :spacing 1}
+  (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
+    [:> CssBaseline
+     [:> Container {:maxWidth false}
+      [:> Grid {:container true :spacing 1}
 
-     [:> Grid {:item true :xs 4}
-      [:> Card  {:style {:height "100%"}}
-       [:> CardContent [weather]]]]
+       [:> Grid card-opts
+        [:> Card  {:style {:height "100%"}}
+         [:> CardContent [weather]]]]
 
-     [:> Grid {:item true :xs 4} [clock]]
+       [:> Grid card-opts [clock]]
 
-     [:> Grid {:item true :xs 4}
-      [:> Card  {:style {:height "100%"}}
-       [:> CardContent
-        [stock-chart :UNH]
-        [stock-chart :GRPN]]]]
+       [:> Grid card-opts
+        [:> Card  {:style {:height "100%"}}
+         [:> CardContent
+          [stock-chart :UNH]
+          [stock-chart :GRPN]]]]
 
-     [:> Grid {:item true :xs 4} [cute]]]]])
+       [:> Grid card-opts [cute]]]]]))
