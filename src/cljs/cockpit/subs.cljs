@@ -60,21 +60,20 @@
                      :time (.parse js/Date k)
                      :value (js/parseFloat (get v "4. close"))})))]
     ;; Start with today and move both backwards by a day at a time
-    ;; until we have non-empty data. This handles weekend/holiday
-    ;; gaps, and past-midnight-but-before-trading times.
-    (loop [today      (time/today)
-           yesterday  (prev-day today)]
-      (let [today-data (->> full-list
-                            (filter #(-> % :date (= (date->str today))))
-                            (sort-by :time))
+    ;; until we find the last trading day. This handles
+    ;; weekend/holiday gaps, and past-midnight-but-before-open dates.
+    (loop [trading-day (time/today)]
+      (let [trading-data (->> full-list
+                              (filter #(-> % :date (= (date->str trading-day))))
+                              (sort-by :time))
             prev-close (->> full-list
-                            (filter #(-> % :date (= (date->str yesterday))))
+                            (remove #(-> % :date (= (date->str trading-day))))
                             (apply max-key :time))]
-        (if (not-empty today-data)
-          (->> (concat [prev-close] today-data)
+        (if (not-empty trading-data)
+          (->> (concat [prev-close] trading-data)
                (map :value)
                vec)
-          (recur (prev-day today) (prev-day yesterday)))))))
+          (recur (prev-day trading-day)))))))
 
 (re-frame/reg-sub
  ::stocks
