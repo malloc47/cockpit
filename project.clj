@@ -1,10 +1,10 @@
 (defproject cockpit "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.748"
+                 [org.clojure/clojurescript "1.10.764"
                   :exclusions [com.google.javascript/closure-compiler-unshaded
                                org.clojure/google-closure-library
                                org.clojure/google-closure-library-third-party]]
-                 [thheller/shadow-cljs "2.8.109"]
+                 [thheller/shadow-cljs "2.9.3"]
                  [reagent "0.10.0"]
                  [re-frame "0.12.0"]
                  [day8.re-frame/tracing "0.5.5"]
@@ -14,10 +14,10 @@
                  [clj-http "3.10.1"]
                  [re-pollsive "0.1.0"]]
 
-  :plugins [[lein-shadow "0.1.7"]
+  :plugins [[lein-shadow "0.2.0"]
             [lein-shell "0.5.0"]]
 
-  :min-lein-version "2.5.3"
+  :min-lein-version "2.9.0"
 
   :jvm-opts ["-Xmx1G"]
 
@@ -76,7 +76,7 @@
   :profiles
   {:dev
    {:dependencies [[binaryage/devtools "1.0.0"]
-                   [day8.re-frame/re-frame-10x "0.6.4"]]
+                   [day8.re-frame/re-frame-10x "0.6.5"]]
     :source-paths ["dev"]}
    :prod {}}
 

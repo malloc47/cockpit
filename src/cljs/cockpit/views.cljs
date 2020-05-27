@@ -1,17 +1,20 @@
 (ns cockpit.views
   (:require
    [re-frame.core :as re-frame]
+   [clojure.string :as str]
    [cockpit.subs :as subs]
    [cockpit.weather :as weather :refer [mm->in]]
    [goog.string :as gstring]
    ["@material-ui/core" :refer [Button Card CardActionArea CardActions
-                                CardContent CardMedia Container Grid
+                                CardContent CardHeader CardMedia Container Grid
                                 CssBaseline Paper Typography ThemeProvider]]
-   ["react-sparklines" :refer [Sparklines SparklinesLine SparklinesReferenceLine dataProcessing]]
+   ["react-sparklines" :refer [Sparklines SparklinesLine
+                               SparklinesReferenceLine dataProcessing]]
    ["@material-ui/core/styles" :refer [makeStyles]]
    ["@material-ui/core/colors/green" :default green]
    ["@material-ui/core/colors/lightBlue" :default lightBlue]
-   [clojure.string :as str]))
+   ["@nivo/line" :refer [ResponsiveLine]]
+   ["react-vega" :refer [VegaLite]]))
 
 (def color-scheme (js->clj green))
 (def accent-scheme (js->clj lightBlue))
@@ -31,7 +34,7 @@
        @(re-frame/subscribe [::subs/time-pt])]
       [:> Typography {:align "center" :variant "h3" :color "textSecondary"
                       :style {:font-size "1vw" :margin-top "0.5em"}}
-        "San Francisco"]]
+       "San Francisco"]]
      [:> Grid {:item true :xs 6}
       [:> Typography {:align "center" :variant "h3"
                       :style {:font-size "1.5vw" :margin-top "0.5em"}}
@@ -153,7 +156,7 @@
            feels-like  (some-> weather :current :feels_like int)
            description (some-> weather :current :weather first
                                :description str/capitalize)
-           rain        (some-> weather :daily first :rain mm->in (round 1))
+           rain        (some-> weather :daily first :rain mm->in (round 2))
            snow        (some-> weather :daily first :snow mm->in (round 1))]
        (->> [{:content description :render? description}
              {:prefix "Feels like "
@@ -211,6 +214,37 @@
               (list " " (some-> snow mm->in (round 1)) "\""))]]])
        (->> weather :daily rest (take 6)))]]))
 
+(defn covid []
+  [:> Card  {:style {:height "100%"}}
+   #_[:> CardHeader {:title "Pandemic"}]
+   [:> CardContent {:style {:height "300px"}}
+    (when-let [data @(re-frame/subscribe [::subs/covid])]
+        [:> ResponsiveLine
+         {:data         (or data [])
+          :colors       {:scheme "nivo"}
+          :enableGridX  false
+          :enableGridY  false
+          :margin       {:top 30 :bottom 50 :left 50 :right 10}
+          :axisLeft     {:tickValues 4}
+          :xScale       {:type      "time"
+                         :format    "%Y-%m-%d"}
+          :xFormat      "time:%Y-%m-%d"
+          :axisBottom   {:tickRotation 90
+                         :format "%m/%d"
+                         :useUTC false}
+          :enablePoints false
+          :legends [{:anchor       "top-right"
+                     :direction    "row"
+                     :justify      false
+                     :translateX   0
+                     :translateY   -20
+                     :itemsSpacing 10
+                     :itemWidth    90
+                     :itemHeight   20
+                     :itemOpacity  0.75
+                     :symbolSize   12
+                     :symbolShape  "circle"}]}])]])
+
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
     [:> CssBaseline
@@ -229,4 +263,6 @@
           [stock-chart :UNH]
           [stock-chart :GRPN]]]]
 
-       [:> Grid card-opts [cute]]]]]))
+       [:> Grid card-opts [cute]]
+
+       [:> Grid card-opts [covid]]]]]))

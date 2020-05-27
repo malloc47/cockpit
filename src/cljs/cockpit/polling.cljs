@@ -13,4 +13,7 @@
     :dispatch-event-on-start? true}
    {:interval                 900
     :event                    [::events/fetch-weather]
+    :dispatch-event-on-start? true}
+   {:interval                 3600
+    :event                    [::events/fetch-covid]
     :dispatch-event-on-start? true}])

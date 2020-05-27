@@ -27,19 +27,14 @@
      (assoc-in db [:stocks (keyword symbol)] result))))
 
 (re-frame/reg-event-db
- ::stocks-fail
- (fn [db [_ result]]
-   (assoc db :stocks {})))
+ ::http-success
+ (fn [db [_ key result]]
+   (assoc db key result)))
 
 (re-frame/reg-event-db
- ::weather
- (fn [db [_ result]]
-   (assoc db :weather result)))
-
-(re-frame/reg-event-db
- ::weather-fail
- (fn [db [_ result]]
-   (assoc db :weather {})))
+ ::http-fail
+ (fn [db [_ [key & _]]]
+   (assoc db key {})))
 
 (re-frame/reg-event-fx
  ::fetch-stocks
@@ -54,7 +49,9 @@
                        :apikey     config/alpha-vantage-api-key}
      :response-format (ajax/json-response-format {:keywords? false})
      :on-success      [::stocks]
-     :on-failure      [::stocks-fail]}}))
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::http-fail :stocks]}}))
 
 (re-frame/reg-event-fx
  ::fetch-weather
@@ -67,5 +64,15 @@
               :units "imperial"
               :appid config/open-weather-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::weather]
-     :on-failure      [::weather-fail]}}))
+     :on-success      [::http-success :weather]
+     :on-failure      [::http-fail :weather]}}))
+
+(re-frame/reg-event-fx
+ ::fetch-covid
+ (fn [_ _]
+   {:http-xhrio
+    {:method :get
+     :uri    "https://data.cityofnewyork.us/resource/rc75-m7u3.json"
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::http-success :covid]
+     :on-failure      [::http-fail :covid]}}))

@@ -3,4 +3,5 @@
 (def default-db
   {:time (js/Date.)
    :stocks {}
-   :weather {}})
+   :weather {}
+   :covid nil})
