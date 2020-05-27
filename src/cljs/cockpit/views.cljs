@@ -218,32 +218,41 @@
   [:> Card  {:style {:height "100%"}}
    #_[:> CardHeader {:title "Pandemic"}]
    [:> CardContent {:style {:height "300px"}}
-    (when-let [data @(re-frame/subscribe [::subs/covid])]
-        [:> ResponsiveLine
-         {:data         (or data [])
-          :colors       {:scheme "nivo"}
-          :enableGridX  false
-          :enableGridY  false
-          :margin       {:top 30 :bottom 50 :left 50 :right 10}
-          :axisLeft     {:tickValues 4}
-          :xScale       {:type      "time"
-                         :format    "%Y-%m-%d"}
-          :xFormat      "time:%Y-%m-%d"
-          :axisBottom   {:tickRotation 90
-                         :format "%m/%d"
-                         :useUTC false}
-          :enablePoints false
-          :legends [{:anchor       "top-right"
-                     :direction    "row"
-                     :justify      false
-                     :translateX   0
-                     :translateY   -20
-                     :itemsSpacing 10
-                     :itemWidth    90
-                     :itemHeight   20
-                     :itemOpacity  0.75
-                     :symbolSize   12
-                     :symbolShape  "circle"}]}])]])
+    (when-let [data @(re-frame/subscribe [::subs/covid2])]
+      [:<>
+       [:> VegaLite {:actions false
+                     :spec {:width    "container"
+                            :mark     {:type "line"}
+                            :encoding
+                            {:x {:field "date"
+                                 :type "temporal"
+                                 :axis {:title nil
+                                        :grid  false}}
+                             :y {:field "y"
+                                 :type "quantitative"
+                                 :axis {:title nil
+                                        :grid  false}
+                                 :range [0,nil]
+                                 :scale {:type "sqrt"}}
+                             :color {:field "type" :type "nominal"
+                                     :legend
+                                     {:orient "top"
+                                      :title nil
+                                      :symbolType "circle"}}}
+                            :autosize {:resize true}
+                            :data
+                            {:name "table"
+                             :format
+                             {:parse
+                              {:date_of_interest "date:'%Y-%m-%dT%H:%M:%S.%L'"}}}}
+                     :data {:table data}
+                     :style {:width "100%"}}]
+       [:> Typography {:variant "h5"
+                       :color "textSecondary"}
+        "Total Cases: " (->> data
+                             (filter #(= (:type %) "cases"))
+                             last
+                             :y)]])]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]

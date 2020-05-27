@@ -123,3 +123,14 @@
         {:id (str "cases: " (-> data last :case_count))
          :data (->> data (map (row-to-y :case_count)) vec)}]))))
 
+(re-frame/reg-sub
+ ::covid2
+ (fn [db _]
+   (->> db :covid
+        (mapcat
+         (fn [row]
+           (let [base-row {:date (:date_of_interest row)}]
+             [(merge base-row {:y (:case_count row) :type "cases"})
+              (merge base-row {:y (:hospitalized_count row) :type "hospitalized"})
+              (merge base-row {:y (:death_count row) :type "deaths"})])))
+        seq)))
