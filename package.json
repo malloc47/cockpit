@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@material-ui/core": "4.9.13",
-    "@nivo/line": "0.61.1",
     "d3-array": "2.4.0",
     "highlight.js": "9.18.1",
     "react": "16.13.1",

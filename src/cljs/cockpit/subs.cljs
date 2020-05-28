@@ -97,34 +97,8 @@
    {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
     :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
 
-
 (re-frame/reg-sub
  ::covid
- (fn [db _]
-   (let [row-to-y
-         (fn [to-rename]
-           (fn [row]
-             (-> row
-                 (select-keys [:x to-rename])
-                 (assoc :y (js/parseInt (to-rename row)))
-                 (dissoc to-rename))))
-
-         data
-         (->> db :covid
-              (map (fn [row]
-                     (-> row
-                         (assoc :x (-> row :date_of_interest (subs 0 10)))
-                         (dissoc :date_of_interest)))))]
-     (when (not-empty data)
-       [{:id (str "hosp: " (-> data last :hospitalized_count))
-         :data (->> data (map (row-to-y :hospitalized_count)) vec)}
-        {:id (str "deaths: " (-> data last :death_count))
-         :data (->> data (map (row-to-y :death_count)) vec)}
-        {:id (str "cases: " (-> data last :case_count))
-         :data (->> data (map (row-to-y :case_count)) vec)}]))))
-
-(re-frame/reg-sub
- ::covid2
  (fn [db _]
    (->> db :covid
         (mapcat

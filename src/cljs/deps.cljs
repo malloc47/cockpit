@@ -4,7 +4,6 @@
                 "karma-cljs-test"       "0.1.0"
                 "karma-junit-reporter"  "2.0.1"}
  :npm-deps     {"@material-ui/core" "4.9.13"
-                "@nivo/line"        "0.61.1"
                 "react-sparklines"  "1.7.0"
                 "vega"              "5.12.3"
                 "vega-lite"         "4.12.2"

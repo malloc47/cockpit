@@ -13,7 +13,6 @@
    ["@material-ui/core/styles" :refer [makeStyles]]
    ["@material-ui/core/colors/green" :default green]
    ["@material-ui/core/colors/lightBlue" :default lightBlue]
-   ["@nivo/line" :refer [ResponsiveLine]]
    ["react-vega" :refer [VegaLite]]))
 
 (def color-scheme (js->clj green))
@@ -216,9 +215,8 @@
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
-   #_[:> CardHeader {:title "Pandemic"}]
    [:> CardContent {:style {:height "300px"}}
-    (when-let [data @(re-frame/subscribe [::subs/covid2])]
+    (when-let [data @(re-frame/subscribe [::subs/covid])]
       [:<>
        [:> VegaLite {:actions false
                      :spec {:width    "container"
