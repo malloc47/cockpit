@@ -11,3 +11,5 @@
 
 (def lat 1)
 (def lon 1)
+
+(def stocks ["AAPL" "IBM"])

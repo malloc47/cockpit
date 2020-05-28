@@ -2,6 +2,7 @@
   (:require
    [re-frame.core :as re-frame]
    [clojure.string :as str]
+   [cockpit.config :as config]
    [cockpit.subs :as subs]
    [cockpit.weather :as weather :refer [mm->in]]
    [goog.string :as gstring]
@@ -267,8 +268,9 @@
        [:> Grid card-opts
         [:> Card  {:style {:height "100%"}}
          [:> CardContent
-          [stock-chart :UNH]
-          [stock-chart :GRPN]]]]
+          (into
+           [:<>]
+           (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]]]
 
        [:> Grid card-opts [cute]]
 
