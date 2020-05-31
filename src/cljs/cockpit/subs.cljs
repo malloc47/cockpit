@@ -126,10 +126,12 @@
           (map (fn [{time :realtimeDeparture
                      day  :serviceDay
                      live :realtimeState}]
-                 (->> time (+ day) (* 1e3)
-                      time-coerce/from-long
-                      (safe-interval now)
-                      time/in-minutes)))
+                 (-> time (+ day) (* 1e3)
+                     time-coerce/from-long
+                     (->> (safe-interval now))
+                     time/in-seconds
+                     (/ 60)
+                     js/Math.ceil)))
           (filter pos?)
           (filter (partial > 90))
           sort
