@@ -13,3 +13,8 @@
 (def lon 1)
 
 (def stocks ["AAPL" "IBM"])
+(def transit-stop-ids
+  [])
+
+(def otp-api-key
+  "")

@@ -216,11 +216,12 @@
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
-   [:> CardContent {:style {:height "300px"}}
+   [:> CardContent {:style {:height "250px"}}
     (when-let [data @(re-frame/subscribe [::subs/covid])]
       [:<>
        [:> VegaLite {:actions false
                      :spec {:width    "container"
+                            :height   130
                             :mark     {:type "line"}
                             :encoding
                             {:x {:field "date"
