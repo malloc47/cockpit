@@ -108,3 +108,46 @@
               (merge base-row {:y (:hospitalized_count row) :type "hospitalized"})
               (merge base-row {:y (:death_count row) :type "deaths"})])))
         seq)))
+
+(defn safe-interval [a b]
+  (try
+    (time/interval a b)
+    (catch js/Object e
+      (js/console.log (str "Interval exception swallowed " a " " b))
+      (time/interval b b))))
+
+(re-frame/reg-sub
+ ::transit-stops
+ (fn [db [_ alias]]
+   (let [now  (time/now)
+         data (->> db :transit alias :stop-times)]
+     (->> db :transit alias :stop-times
+          (mapcat :times)
+          (map (fn [{time :realtimeDeparture
+                     day  :serviceDay
+                     live :realtimeState}]
+                 (->> time (+ day) (* 1e3)
+                      time-coerce/from-long
+                      (safe-interval now)
+                      time/in-minutes)))
+          (filter pos?)
+          (filter (partial > 90))
+          sort
+          (take 4)))))
+
+(defn alias->direction [alias]
+  (condp = (-> alias name last)
+    "S" "Downtown"
+    "N" "Uptown"))
+
+(re-frame/reg-sub
+ ::transit-stops-fallback
+ (fn [db [_ alias]]
+   (let [{:keys [direction1 direction2]}
+         (->> db :transit-fallback alias :stop-times)]
+     (->> [direction1 direction2]
+          (filter #(= (:name %) (alias->direction alias)))
+          (mapcat (comp (partial map :minutes) :times))
+          (filter pos?)
+          sort
+          (take 4)))))

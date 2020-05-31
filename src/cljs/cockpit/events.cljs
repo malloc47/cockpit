@@ -3,6 +3,7 @@
    [re-frame.core :as re-frame]
    [cockpit.db :as db]
    [cockpit.config :as config]
+   [clojure.string :as str]
    [day8.re-frame.tracing :refer-macros [fn-traced]]
    [day8.re-frame.http-fx]
    [ajax.core :as ajax]))
@@ -28,8 +29,10 @@
 
 (re-frame/reg-event-db
  ::http-success
- (fn [db [_ key result]]
-   (assoc db key result)))
+ (fn [db [_ key-path result]]
+   (if (sequential? key-path)
+     (assoc-in db key-path result)
+     (assoc-in db [key-path] result))))
 
 (re-frame/reg-event-db
  ::http-fail
@@ -76,3 +79,56 @@
      :response-format (ajax/json-response-format {:keywords? true})
      :on-success      [::http-success :covid]
      :on-failure      [::http-fail :covid]}}))
+
+(re-frame/reg-event-fx
+ ::fetch-transit-stop
+ (fn [_ [_ stop-id alias]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str config/otp-uri
+                           "/routers/default/index/stops/"
+                           stop-id
+                           "/stoptimes")
+     :params          {:apikey    config/otp-api-key
+                       :timeRange 7200}
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::http-success [:transit alias :stop-times]]
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::http-fail :transit]}}))
+
+(re-frame/reg-event-fx
+ ::fetch-transit-route
+ (fn [_ [_ route-id alias]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str config/otp-uri
+                           "/routers/default/index/routes/"
+                           route-id
+                           "/")
+     :params          {:apikey config/otp-api-key}
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::http-success [:transit alias :route]]
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::http-fail :transit]}}))
+
+(defn id->station [id]
+  (-> id (str/replace-first config/id-prefix "")
+      drop-last
+      str/join))
+
+(re-frame/reg-event-fx
+ ::fetch-transit-fallback
+ (fn [_ [_ stop-id alias]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str config/fallback-uri
+                           (-> alias name drop-last str/join)
+                           "/"
+                           (id->station stop-id))
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::http-success [:transit-fallback alias :stop-times]]
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::http-fail :transit-fallback]}}))

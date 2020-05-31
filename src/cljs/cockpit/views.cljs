@@ -6,7 +6,7 @@
    [cockpit.subs :as subs]
    [cockpit.weather :as weather :refer [mm->in]]
    [goog.string :as gstring]
-   ["@material-ui/core" :refer [Button Card CardActionArea CardActions
+   ["@material-ui/core" :refer [Avatar Button Card CardActionArea CardActions
                                 CardContent CardHeader CardMedia Container Grid
                                 CssBaseline Paper Typography ThemeProvider]]
    ["react-sparklines" :refer [Sparklines SparklinesLine
@@ -254,8 +254,66 @@
                              last
                              :y)]])]])
 
+(defn transit []
+  [:> Card  {:style {:height "100%"}}
+   [:> CardContent
+    [:> Grid {:container true :spacing 1}
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4" :color "textSecondary"} "▼"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar #_{:src (-> config/transit-stops :QS :img) :alt "Q"}
+       {:style {:background-color "#FCCC0A" :color "#000000" :font-weight "bold"}} "Q"]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :QS])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar {:src (-> config/transit-stops :6N :img) :alt "6"}]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :6N])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar {:src (-> config/transit-stops :6S :img) :alt "6"}]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :6S])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar {:src (-> config/transit-stops :6N :img) :alt "6"}]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops :6N])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar {:src (-> config/transit-stops :6S :img) :alt "6"}]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops :6S])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     ]]])
+
 (defn main-panel []
-  (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
+  (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]
     [:> CssBaseline
      [:> Container {:maxWidth false}
       [:> Grid {:container true :spacing 1}
@@ -273,6 +331,8 @@
            [:<>]
            (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]]]
 
-       [:> Grid card-opts [cute]]
+       [:> Grid card-opts [covid]]
 
-       [:> Grid card-opts [covid]]]]]))
+       [:> Grid card-opts [transit]]
+
+       #_[:> Grid card-opts [cute]]]]]))
