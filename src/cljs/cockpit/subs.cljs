@@ -101,6 +101,7 @@
  ::covid
  (fn [db _]
    (->> db :covid
+        butlast
         (mapcat
          (fn [row]
            (let [base-row {:date (:date_of_interest row)}]
