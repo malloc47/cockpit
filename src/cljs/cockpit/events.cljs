@@ -50,7 +50,7 @@
 
 (re-frame/reg-event-db
  ::http-fail
- (fn [db [_ [_ key & _]]]
+ (fn [db [_ key]]
    (assoc db key {})))
 
 (re-frame/reg-event-fx
