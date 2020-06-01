@@ -136,7 +136,11 @@
  (fn [db _]
    (:transit-fallback db)))
 
-(defn safe-interval [a b]
+(defn safe-interval
+  "The local clock and the OTP instance clock are not guaranteed to be
+  in sync, and in practice the OTP instance provides times ahead of
+  local clock. Instead of blowing up, this swallows these errors."
+  [a b]
   (try
     (time/interval a b)
     (catch js/Object e

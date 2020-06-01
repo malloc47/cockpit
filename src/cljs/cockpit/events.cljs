@@ -28,8 +28,8 @@
      (assoc-in db [:stocks (keyword symbol)] result))))
 
 (defn explode-nested
-  [coll]
   "Explode the values from nested seqs into multiple collections"
+  [coll]
   (reduce (fn [coll el]
             (if (sequential? el)
               (for [c coll e el]
