@@ -145,9 +145,9 @@
 (re-frame/reg-sub
  ::transit-stops
  :<- [::transit]
- (fn [transit [_ alias]]
+ (fn [transit [_ {:keys [id]}]]
    (let [now  (time/now)]
-     (->> transit alias :stop-times
+     (->> transit id :stop-times
           (mapcat :times)
           (map (fn [{time :realtimeDeparture
                      day  :serviceDay
@@ -163,19 +163,19 @@
           sort
           (take 4)))))
 
-(defn alias->direction [alias]
-  (condp = (-> alias name last)
+(defn direction->name [direction]
+  (condp = direction
     "S" "Downtown"
     "N" "Uptown"))
 
 (re-frame/reg-sub
  ::transit-stops-fallback
  :<- [::transit-fallback]
- (fn [transit-fallback [_ alias]]
+ (fn [transit-fallback [_ {:keys [direction id]}]]
    (let [{:keys [direction1 direction2]}
-         (->> transit-fallback alias :stop-times)]
+         (->> transit-fallback id :stop-times)]
      (->> [direction1 direction2]
-          (filter #(= (:name %) (alias->direction alias)))
+          (filter #(= (:name %) (direction->name direction)))
           (mapcat (comp (partial map :minutes) :times))
           (filter pos?)
           sort

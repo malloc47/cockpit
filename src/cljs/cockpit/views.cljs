@@ -262,51 +262,65 @@
      [:> Grid {:item true :xs 1}
       [:> Typography {:variant "h4" :color "textSecondary"} "▼"]]
      [:> Grid {:item true :xs 2}
-      [:> Avatar #_{:src (-> config/transit-stops :QS :img) :alt "Q"}
-       {:style {:background-color "#FCCC0A" :color "#000000" :font-weight "bold"}} "Q"]]
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold"}}
+       "Q"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :QS])
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+                                  (nth config/transit-stop-whitelist 0)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
 
      [:> Grid {:item true :xs 1}
       [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
      [:> Grid {:item true :xs 2}
-      [:> Avatar {:src (-> config/transit-stops :6N :img) :alt "6"}]]
+      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
+                          :font-weight "bold"}}
+       "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :6N])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
-
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:src (-> config/transit-stops :6S :img) :alt "6"}]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback :6S])
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+                                  (nth config/transit-stop-whitelist 1)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
 
      [:> Grid {:item true :xs 1}
       [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
      [:> Grid {:item true :xs 2}
-      [:> Avatar {:src (-> config/transit-stops :6N :img) :alt "6"}]]
+      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
+                          :font-weight "bold"}}
+       "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops :6N])
+       (->> @(re-frame/subscribe [::subs/transit-stops
+                                  (nth config/transit-stop-whitelist 1)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
 
      [:> Grid {:item true :xs 1}
       [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
      [:> Grid {:item true :xs 2}
-      [:> Avatar {:src (-> config/transit-stops :6S :img) :alt "6"}]]
+      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
+                          :font-weight "bold"}}
+       "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops :6S])
+       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+                                  (nth config/transit-stop-whitelist 2)])
+            (map (fn [minutes] (str minutes "m")))
+            (str/join ", "))]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
+     [:> Grid {:item true :xs 2}
+      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
+                          :font-weight "bold"}}
+       "6"]]
+     [:> Grid {:item true :xs 9}
+      [:> Typography {:variant "h4"}
+       (->> @(re-frame/subscribe [::subs/transit-stops
+                                  (nth config/transit-stop-whitelist 2)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
 
