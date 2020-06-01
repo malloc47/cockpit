@@ -19,14 +19,22 @@
             :event                    [::events/fetch-stocks sym]
             :dispatch-event-on-start? true})
          config/stocks)
-    (map (fn [[alias {:keys [stop-id]}]]
-           {:interval                 30
-            :event                    [::events/fetch-transit-stop stop-id alias]
-            :dispatch-event-on-start? true})
-         (filter (constantly true) #_(comp not :fallback? second) config/transit-stops))
-    (map (fn [[alias {:keys [stop-id]}]]
-           {:interval                 30
-            :event                    [::events/fetch-transit-fallback
-                                       stop-id alias]
-            :dispatch-event-on-start? true})
-           (filter (comp true? :fallback? second) config/transit-stops)))))
+    (->> config/transit-stop-whitelist
+         (map (fn [stop]
+                {:interval                 30
+                 :event                    [::events/fetch-transit-stop stop]
+                 :dispatch-event-on-start? true})))
+    (->> config/transit-stop-whitelist
+         ;; ignore the :id and :direction keys
+         (group-by (juxt :agency-id :stop-id))
+         vals
+         (map (partial
+               reduce
+               (fn [a b]
+                 (let [c (merge a b)]
+                   ;; merge :id key into a list of ids
+                   (assoc c :id (flatten [(:id a) (:id b)]))))))
+         (map (fn [stop]
+                {:interval                 30
+                 :event                    [::events/fetch-transit-fallback stop]
+                 :dispatch-event-on-start? true}))))))

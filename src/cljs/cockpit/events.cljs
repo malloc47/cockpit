@@ -27,16 +27,30 @@
                     (get "2. Symbol"))]
      (assoc-in db [:stocks (keyword symbol)] result))))
 
+(defn explode-nested
+  [coll]
+  "Explode the values from nested seqs into multiple collections"
+  (reduce (fn [coll el]
+            (if (sequential? el)
+              (for [c coll e el]
+                (conj c e))
+              (map (fn [c] (conj c el)) coll)))
+          [[]]
+          coll))
+
 (re-frame/reg-event-db
  ::http-success
  (fn [db [_ key-path result]]
    (if (sequential? key-path)
-     (assoc-in db key-path result)
+     (reduce (fn [db key-path]
+               (assoc-in db key-path result))
+             db
+             (explode-nested key-path))
      (assoc-in db [key-path] result))))
 
 (re-frame/reg-event-db
  ::http-fail
- (fn [db [_ [key & _]]]
+ (fn [db [_ [_ key & _]]]
    (assoc db key {})))
 
 (re-frame/reg-event-fx
@@ -80,24 +94,42 @@
      :on-success      [::http-success :covid]
      :on-failure      [::http-fail :covid]}}))
 
+(defn stop->gtfs-id
+  [{:keys [agency-id stop-id direction]}]
+  (str agency-id ":" stop-id direction))
+
 (re-frame/reg-event-fx
  ::fetch-transit-stop
- (fn [_ [_ stop-id alias]]
+ (fn [_ [_ {:keys [id] :as stop}]]
    {:http-xhrio
     {:method          :get
      :uri             (str config/otp-uri
                            "/routers/default/index/stops/"
-                           stop-id
+                           (stop->gtfs-id stop)
                            "/stoptimes")
      :params          {:apikey    config/otp-api-key
                        :timeRange 7200}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success [:transit alias :stop-times]]
-     ;; TODO: this nukes the whole payload even if one of the queries
-     ;; is successful
+     :on-success      [::http-success [:transit id :stop-times]]
      :on-failure      [::http-fail :transit]}}))
 
 (re-frame/reg-event-fx
+ ::fetch-transit-fallback
+ (fn [_ [_ {:keys [id stop-id]}]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str config/fallback-uri
+                           (first stop-id)
+                           "/"
+                           stop-id)
+     :response-format (ajax/json-response-format {:keywords? true})
+     ;; :id will be an array and the payload will be duplicated in the
+     ;; db which will match the shape of the OTP-based transit query
+     ;; which is separated by direction
+     :on-success      [::http-success [:transit-fallback id :stop-times]]
+     :on-failure      [::http-fail :transit-fallback]}}))
+
+#_(re-frame/reg-event-fx
  ::fetch-transit-route
  (fn [_ [_ route-id alias]]
    {:http-xhrio
@@ -112,23 +144,3 @@
      ;; TODO: this nukes the whole payload even if one of the queries
      ;; is successful
      :on-failure      [::http-fail :transit]}}))
-
-(defn id->station [id]
-  (-> id (str/replace-first config/id-prefix "")
-      drop-last
-      str/join))
-
-(re-frame/reg-event-fx
- ::fetch-transit-fallback
- (fn [_ [_ stop-id alias]]
-   {:http-xhrio
-    {:method          :get
-     :uri             (str config/fallback-uri
-                           (-> alias name drop-last str/join)
-                           "/"
-                           (id->station stop-id))
-     :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success [:transit-fallback alias :stop-times]]
-     ;; TODO: this nukes the whole payload even if one of the queries
-     ;; is successful
-     :on-failure      [::http-fail :transit-fallback]}}))

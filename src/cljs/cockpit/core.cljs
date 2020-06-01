@@ -24,7 +24,7 @@
   (re-frame/dispatch-sync [::events/initialize-db])
   (re-frame/dispatch-sync [::poll/init])
   (re-frame/dispatch [::poll/set-rules poll-config/rules])
-  (doseq [[alias {:keys [route-id]}] config/transit-stops]
+  #_(doseq [[alias {:keys [route-id]}] config/transit-stops]
     (re-frame/dispatch [::events/fetch-transit-route route-id alias]))
   (dev-setup)
   (mount-root))
