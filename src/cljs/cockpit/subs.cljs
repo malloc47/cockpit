@@ -7,36 +7,40 @@
 
 (defn db->date-sub
   [format-map]
-  (fn [db _]
-   (-> db
-       :time
-       (.toLocaleTimeString [] (clj->js format-map)))))
+  (fn [clock _]
+   (.toLocaleTimeString clock [] (clj->js format-map))))
 
-;;; These are all L2 subs but should be converted to L3
-;;; https://github.com/day8/re-frame/blob/master/docs/subscriptions.md
+(re-frame/reg-sub
+ ::clock
+ (fn [db _]
+   (:clock db)))
+
 (re-frame/reg-sub
  ::time
+ :<- [::clock]
  (db->date-sub {:hour "numeric" :minute "numeric" :hour12 true}))
 
 (re-frame/reg-sub
  ::time-pt
+ :<- [::clock]
  (db->date-sub
   {:hour "numeric" :minute "numeric"
    :hour12 true :timeZone "America/Los_Angeles"}))
 
 (re-frame/reg-sub
  ::time-ct
+ :<- [::clock]
  (db->date-sub
   {:hour "numeric" :minute "numeric"
    :hour12 true :timeZone "America/Chicago"}))
 
 (re-frame/reg-sub
  ::day
- (fn [db _]
-   (-> db
-       :time
-       (.toLocaleDateString
-        [] #js {:weekday "long" :month "long" :day "numeric"}))))
+ :<- [::clock]
+ (fn [clock _]
+   (.toLocaleDateString
+    clock
+    [] #js {:weekday "long" :month "long" :day "numeric"})))
 
 (defn date->str
   [date]
@@ -80,8 +84,13 @@
 (re-frame/reg-sub
  ::stocks
  (fn [db _]
-   (->> db
-        :stocks
+   (:stocks db)))
+
+(re-frame/reg-sub
+ ::stocks-sparkline
+ :<- [::stocks]
+ (fn [stocks _]
+   (->> stocks
         (map (fn [[symbol api-result]]
                [symbol (convert-alpha-vantage-to-sparkline api-result)]))
         (into {}))))
@@ -93,14 +102,21 @@
 
 (re-frame/reg-sub
  ::sun
- (fn [{{{:keys [sunrise sunset]} :current} :weather} _]
+ :<- [::weather]
+ (fn [{{:keys [sunrise sunset]} :current} _]
    {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
     :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
 
 (re-frame/reg-sub
  ::covid
  (fn [db _]
-   (->> db :covid
+   (:covid db)))
+
+(re-frame/reg-sub
+ ::covid-rows
+ :<- [::covid]
+ (fn [covid _]
+   (->> covid
         butlast
         (mapcat
          (fn [row]
@@ -110,19 +126,28 @@
               (merge base-row {:y (:death_count row) :type "deaths"})])))
         seq)))
 
+(re-frame/reg-sub
+ ::transit
+ (fn [db _]
+   (:transit db)))
+
+(re-frame/reg-sub
+ ::transit-fallback
+ (fn [db _]
+   (:transit-fallback db)))
+
 (defn safe-interval [a b]
   (try
     (time/interval a b)
     (catch js/Object e
-      (js/console.log (str "Interval exception swallowed " a " " b))
       (time/interval b b))))
 
 (re-frame/reg-sub
  ::transit-stops
- (fn [db [_ alias]]
-   (let [now  (time/now)
-         data (->> db :transit alias :stop-times)]
-     (->> db :transit alias :stop-times
+ :<- [::transit]
+ (fn [transit [_ alias]]
+   (let [now  (time/now)]
+     (->> transit alias :stop-times
           (mapcat :times)
           (map (fn [{time :realtimeDeparture
                      day  :serviceDay
@@ -145,9 +170,10 @@
 
 (re-frame/reg-sub
  ::transit-stops-fallback
- (fn [db [_ alias]]
+ :<- [::transit-fallback]
+ (fn [transit-fallback [_ alias]]
    (let [{:keys [direction1 direction2]}
-         (->> db :transit-fallback alias :stop-times)]
+         (->> transit-fallback alias :stop-times)]
      (->> [direction1 direction2]
           (filter #(= (:name %) (alias->direction alias)))
           (mapcat (comp (partial map :minutes) :times))

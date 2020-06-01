@@ -80,7 +80,7 @@
     (/ (.round js/Math (* base num)) base)))
 
 (defn stock-chart [symbol]
-  (let [data         (clj->js (symbol @(re-frame/subscribe [::subs/stocks])))
+  (let [data         (clj->js (symbol @(re-frame/subscribe [::subs/stocks-sparkline])))
         diff         (round (- (last data) (first data)))
         up?          (>= (last data) (first data))
         diff-display (str (if (>= diff 0) "+" "") diff)
@@ -217,7 +217,7 @@
 (defn covid []
   [:> Card  {:style {:height "100%"}}
    [:> CardContent {:style {:height "250px"}}
-    (when-let [data @(re-frame/subscribe [::subs/covid])]
+    (when-let [data @(re-frame/subscribe [::subs/covid-rows])]
       [:<>
        [:> VegaLite {:actions false
                      :spec {:width    "container"

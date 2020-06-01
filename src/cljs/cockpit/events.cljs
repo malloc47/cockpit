@@ -17,7 +17,7 @@
 (re-frame/reg-event-db
  ::timer
  (fn [db [_ new-time]]
-   (assoc db :time (js/Date.))))
+   (assoc db :clock (js/Date.))))
 
 (re-frame/reg-event-db
  ::stocks
