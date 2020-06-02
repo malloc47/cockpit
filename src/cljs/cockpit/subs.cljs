@@ -149,8 +149,9 @@
 (re-frame/reg-sub
  ::transit-stops
  :<- [::transit]
- (fn [transit [_ {:keys [id]}]]
-   (let [now  (time/now)]
+ :<- [::clock]
+ (fn [[transit clock] [_ {:keys [id]}]]
+   (let [now (time-coerce/from-date clock)]
      (->> transit id :stop-times
           (mapcat :times)
           (map (fn [{time :realtimeDeparture
