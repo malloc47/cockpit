@@ -40,7 +40,9 @@
 
 (re-frame/reg-event-db
  ::http-success
- (fn [db [_ key-path result]]
+ (fn [db [_ key-path subsequent-event result]]
+   (when subsequent-event
+     (re-frame/dispatch [subsequent-event result]))
    (if (sequential? key-path)
      (reduce (fn [db key-path]
                (assoc-in db key-path result))
@@ -81,7 +83,7 @@
               :units "imperial"
               :appid config/open-weather-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :weather]
+     :on-success      [::http-success :weather nil]
      :on-failure      [::http-fail :weather]}}))
 
 (re-frame/reg-event-fx
@@ -91,56 +93,5 @@
     {:method :get
      :uri    "https://data.cityofnewyork.us/resource/rc75-m7u3.json"
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :covid]
+     :on-success      [::http-success :covid nil]
      :on-failure      [::http-fail :covid]}}))
-
-(defn stop->gtfs-id
-  [{:keys [agency-id stop-id direction]}]
-  (str agency-id ":" stop-id direction))
-
-(re-frame/reg-event-fx
- ::fetch-transit-stop
- (fn [_ [_ {:keys [id] :as stop}]]
-   {:http-xhrio
-    {:method          :get
-     :uri             (str config/otp-uri
-                           "/routers/default/index/stops/"
-                           (stop->gtfs-id stop)
-                           "/stoptimes")
-     :params          {:apikey    config/otp-api-key
-                       :timeRange 7200}
-     :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success [:transit id :stop-times]]
-     :on-failure      [::http-fail :transit]}}))
-
-(re-frame/reg-event-fx
- ::fetch-transit-fallback
- (fn [_ [_ {:keys [id stop-id]}]]
-   {:http-xhrio
-    {:method          :get
-     :uri             (str config/fallback-uri
-                           (first stop-id)
-                           "/"
-                           stop-id)
-     :response-format (ajax/json-response-format {:keywords? true})
-     ;; :id will be an array and the payload will be duplicated in the
-     ;; db which will match the shape of the OTP-based transit query
-     ;; which is separated by direction
-     :on-success      [::http-success [:transit-fallback id :stop-times]]
-     :on-failure      [::http-fail :transit-fallback]}}))
-
-#_(re-frame/reg-event-fx
- ::fetch-transit-route
- (fn [_ [_ route-id alias]]
-   {:http-xhrio
-    {:method          :get
-     :uri             (str config/otp-uri
-                           "/routers/default/index/routes/"
-                           route-id
-                           "/")
-     :params          {:apikey config/otp-api-key}
-     :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success [:transit alias :route]]
-     ;; TODO: this nukes the whole payload even if one of the queries
-     ;; is successful
-     :on-failure      [::http-fail :transit]}}))

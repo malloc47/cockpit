@@ -1,6 +1,7 @@
 (ns cockpit.polling
   (:require [cockpit.config :as config]
-            [cockpit.events :as events]))
+            [cockpit.events :as events]
+            [cockpit.transit :as transit]))
 
 (def rules
   (vec
@@ -21,8 +22,8 @@
          config/stocks)
     (->> config/transit-stop-whitelist
          (map (fn [stop]
-                {:interval                 30
-                 :event                    [::events/fetch-transit-stop stop]
+                {:interval 30
+                 :event [::transit/fetch-stop-times stop]
                  :dispatch-event-on-start? true})))
     (->> config/transit-stop-whitelist
          ;; ignore the :id and :direction keys
@@ -35,6 +36,6 @@
                    ;; merge :id key into a list of ids
                    (assoc c :id (flatten [(:id a) (:id b)]))))))
          (map (fn [stop]
-                {:interval                 30
-                 :event                    [::events/fetch-transit-fallback stop]
+                {:interval 30
+                 :event [::transit/fetch-stop-times-fallback stop]
                  :dispatch-event-on-start? true}))))))

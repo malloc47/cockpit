@@ -5,6 +5,7 @@
    [cockpit.config :as config]
    [cockpit.subs :as subs]
    [cockpit.weather :as weather :refer [mm->in]]
+   [cockpit.transit :as transit]
    [goog.string :as gstring]
    ["@material-ui/core" :refer [Avatar Button Card CardActionArea CardActions
                                 CardContent CardHeader CardMedia Container Grid
@@ -267,7 +268,7 @@
        "Q"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+       (->> @(re-frame/subscribe [::transit/stop-times-fallback
                                   (nth config/transit-stop-whitelist 0)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -280,7 +281,7 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+       (->> @(re-frame/subscribe [::transit/stop-times-fallback
                                   (nth config/transit-stop-whitelist 1)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -293,7 +294,7 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops
+       (->> @(re-frame/subscribe [::transit/stop-times
                                   (nth config/transit-stop-whitelist 1)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -306,7 +307,7 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops-fallback
+       (->> @(re-frame/subscribe [::transit/stop-times-fallback
                                   (nth config/transit-stop-whitelist 2)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -319,7 +320,7 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::subs/transit-stops
+       (->> @(re-frame/subscribe [::transit/stop-times
                                   (nth config/transit-stop-whitelist 2)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
