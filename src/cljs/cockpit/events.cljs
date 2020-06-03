@@ -38,17 +38,19 @@
           [[]]
           coll))
 
+(defn assoc-in-all
+  [m key-paths v]
+  (if (sequential? key-paths)
+    (reduce (fn [m key-path]
+              (assoc-in m key-path v))
+            m
+            (explode-nested key-paths))
+    (assoc m key-paths v)))
+
 (re-frame/reg-event-db
  ::http-success
- (fn [db [_ key-path subsequent-event result]]
-   (when subsequent-event
-     (re-frame/dispatch [subsequent-event result]))
-   (if (sequential? key-path)
-     (reduce (fn [db key-path]
-               (assoc-in db key-path result))
-             db
-             (explode-nested key-path))
-     (assoc-in db [key-path] result))))
+ (fn [db [_ key-path result]]
+   (assoc-in-all db key-path result)))
 
 (re-frame/reg-event-db
  ::http-fail
@@ -83,7 +85,7 @@
               :units "imperial"
               :appid config/open-weather-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :weather nil]
+     :on-success      [::http-success :weather]
      :on-failure      [::http-fail :weather]}}))
 
 (re-frame/reg-event-fx
@@ -93,5 +95,5 @@
     {:method :get
      :uri    "https://data.cityofnewyork.us/resource/rc75-m7u3.json"
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :covid nil]
+     :on-success      [::http-success :covid]
      :on-failure      [::http-fail :covid]}}))

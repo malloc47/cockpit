@@ -6,4 +6,4 @@
    :weather {}
    :covid   nil
    :transit {:stop-times {}
-             :routes     #{}}})
+             :routes     {}}})

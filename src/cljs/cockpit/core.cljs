@@ -1,13 +1,12 @@
 (ns cockpit.core
   (:require
-   [reagent.core :as reagent]
-   [reagent.dom :as rdom]
-   [re-frame.core :as re-frame]
-   [cockpit.events :as events]
-   [cockpit.views :as views]
    [cockpit.config :as config]
+   [cockpit.events :as events]
    [cockpit.polling :as poll-config]
-   [re-pollsive.core :as poll]))
+   [cockpit.views :as views]
+   [re-frame.core :as re-frame]
+   [re-pollsive.core :as poll]
+   [reagent.dom :as rdom]))
 
 
 (defn dev-setup []
@@ -24,7 +23,5 @@
   (re-frame/dispatch-sync [::events/initialize-db])
   (re-frame/dispatch-sync [::poll/init])
   (re-frame/dispatch [::poll/set-rules poll-config/rules])
-  #_(doseq [[alias {:keys [route-id]}] config/transit-stops]
-    (re-frame/dispatch [::events/fetch-transit-route route-id alias]))
   (dev-setup)
   (mount-root))

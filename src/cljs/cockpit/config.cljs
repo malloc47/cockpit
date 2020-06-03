@@ -13,10 +13,6 @@
 (def lon 1)
 
 (def stocks ["AAPL" "IBM"])
-(def transit-stop-ids
-  [])
-
-(def id-prefix "MTASBWY:")
 
 (def transit-stop-whitelist
   [{:id :6N
@@ -30,3 +26,11 @@
 
 (def otp-api-key
   "")
+
+(def otp-uri
+  "https://otp-mta-prod.camsys-apps.com/otp")
+
+(def fallback-agency "MTASBWY")
+
+(def fallback-uri
+  "http://traintimelb-367443097.us-east-1.elb.amazonaws.com/getTime/")

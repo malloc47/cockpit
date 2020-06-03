@@ -3,6 +3,7 @@
    [ajax.core :as ajax]
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
+   [clojure.set :refer [difference]]
    [cockpit.config :as config]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
@@ -16,6 +17,15 @@
   (str agency-id ":" stop-id direction))
 
 (defn gtfs->route-id [{{route-id :id} :route}] route-id)
+
+(defn fallback->route-ids
+  [fallback]
+  (->> fallback
+       ((juxt :direction1 :direction2))
+       (mapcat :times)
+       (map :route)
+       distinct
+       (map (partial str config/fallback-agency ":"))))
 
 (defn safe-interval
   "The local clock and the OTP instance clock are not guaranteed to be
@@ -41,7 +51,7 @@
      :params          {:apikey    config/otp-api-key
                        :timeRange 7200}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::events/http-success [:transit :stop-times id] nil]
+     :on-success      [::persist-stop-times [:transit :stop-times id]]
      :on-failure      [::events/http-fail :transit]}}))
 
 (re-frame/reg-event-fx
@@ -57,17 +67,35 @@
      ;; :id will be an array and the payload will be duplicated in the
      ;; db which will match the shape of the OTP-based transit query
      ;; which is separated by direction
-     :on-success      [::events/http-success [:transit-fallback :stop-times id] nil]
+     :on-success      [::persist-stop-times [:transit-fallback :stop-times id]]
      :on-failure      [::events/http-fail :transit-fallback]}}))
 
-#_(re-frame/reg-event-fx
- ::lookup-routes-for-stop-times
- (fn [_ [_ stop-times]]
-   (let [route-ids (->> stop-times (map gtfs->route-id) set)]
-     {:dispatch-n (map (fn [route-id] [::fetch-route route-id])
+
+;;; TODO: maybe consider one of
+;;; https://github.com/Day8/re-frame-async-flow-fx
+;;; https://github.com/day8/re-frame-forward-events-fx
+(re-frame/reg-event-fx
+ ::persist-stop-times
+ (fn [{:keys [db]} [_ key-path stop-times]]
+   (let [existing-route-ids (-> db :transit :routes keys set)
+         ;; make this function work on the normal GTFS payload
+         ;; (vector) or the fallback payload (map)
+         new-route-ids      (set (if (sequential? stop-times)
+                                   (map gtfs->route-id stop-times)
+                                   (fallback->route-ids stop-times)))
+         ;; diff what is in the DB with the newly-seen routes so we
+         ;; only fetch them once
+         route-ids          (->> (difference new-route-ids
+                                             existing-route-ids)
+                                 (remove nil?))]
+     { ;; attach the raw requests to the db
+      :db (events/assoc-in-all db key-path stop-times)
+      ;; fire requests for the routes listed in the payload
+      :dispatch-n (map (fn [route-id]
+                         [::fetch-route route-id])
                        route-ids)})))
 
-#_(re-frame/reg-event-fx
+(re-frame/reg-event-fx
  ::fetch-route
  (fn [_ [_ route-id]]
    {:http-xhrio
@@ -78,10 +106,10 @@
                            "/")
      :params          {:apikey config/otp-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success [:transit :route route-id] nil]
+     :on-success      [::events/http-success [:transit :routes route-id]]
      ;; TODO: this nukes the whole payload even if one of the queries
      ;; is successful
-     :on-failure      [::http-fail :transit]}}))
+     :on-failure      [::events/http-fail :transit]}}))
 
 ;;; Subscriptions
 
