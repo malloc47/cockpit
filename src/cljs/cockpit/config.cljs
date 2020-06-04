@@ -15,14 +15,12 @@
 (def stocks ["AAPL" "IBM"])
 
 (def transit-stop-whitelist
-  [{:id :6N
-    :agency-id "MTASBWY"
-    :stop-id   "625"
+  [{:agency-id "MTASBWY"
+    :stop-id   "MTASBWY:625N"
     :direction "N"
     :fallback? false}
-   {:id "MTASBWY:625S"
-    :agency-id "MTASBWY"
-    :stop-id   "625"
+   {:agency-id "MTASBWY"
+    :stop-id   "MTASBWY:625S"
     :direction "S"
     :fallback? false}])
 

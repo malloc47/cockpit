@@ -4,6 +4,7 @@
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [clojure.set :refer [difference map-invert]]
+   [clojure.string :as str]
    [cockpit.config :as config]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
@@ -11,6 +12,15 @@
    [re-frame.core :as re-frame]))
 
 ;;; Utils
+
+(defn split-stop-id
+  [stop-id]
+  (let [[_ agency-id stop-alias line direction]
+        (re-find #"(\w+):((\w)\w+)(\w)" stop-id)]
+    {:agency-id  agency-id
+     :stop-alias stop-alias
+     :line       line
+     :direction  direction}))
 
 (defn stop->gtfs-id
   [{:keys [agency-id stop-id direction]}]
@@ -45,34 +55,35 @@
 
 (re-frame/reg-event-fx
  ::fetch-stop-times
- (fn [_ [_ {:keys [id] :as stop}]]
+ (fn [_ [_ {:keys [stop-id] :as stop}]]
    {:http-xhrio
     (merge
      otp-request
      {:uri             (str config/otp-uri
                             "/routers/default/index/stops/"
-                            (stop->gtfs-id stop)
+                            stop-id
                             "/stoptimes")
       :params          {:apikey    config/otp-api-key
                         :timeRange 7200}
-      :on-success      [::persist-stop-times [:transit :stop-times id]]
+      :on-success      [::persist-stop-times [:transit :stop-times stop]]
       :on-failure      [::events/http-fail :transit]})}))
 
 (re-frame/reg-event-fx
  ::fetch-stop-times-fallback
- (fn [_ [_ {:keys [id stop-id] :as stop}]]
-   {:http-xhrio
-    {:method          :get
-     :uri             (str config/fallback-uri
-                           (first stop-id)
-                           "/"
-                           stop-id)
-     :response-format (ajax/json-response-format {:keywords? true})
-     ;; :id will be an array and the payload will be duplicated in the
-     ;; db which will match the shape of the OTP-based transit query
-     ;; which is separated by direction
-     :on-success      [::persist-stop-times [:transit-fallback :stop-times stop]]
-     :on-failure      [::events/http-fail :transit-fallback]}}))
+ (fn [_ [_ {:keys [stop-id] :as stop}]]
+   (let [{:keys [stop-alias line]} (split-stop-id stop-id)]
+     {:http-xhrio
+      {:method          :get
+       :uri             (str config/fallback-uri
+                             line
+                             "/"
+                             stop-alias)
+       :response-format (ajax/json-response-format {:keywords? true})
+       ;; :id will be an array and the payload will be duplicated in the
+       ;; db which will match the shape of the OTP-based transit query
+       ;; which is separated by direction
+       :on-success      [::persist-stop-times [:transit-fallback :stop-times stop]]
+       :on-failure      [::events/http-fail :transit-fallback]}})))
 
 (re-frame/reg-event-fx
  ::fetch-route
@@ -92,17 +103,17 @@
 
 (re-frame/reg-event-fx
  ::fetch-stop
- (fn [_ [_ stop]]
+ (fn [_ [_ {:keys [stop-id] :as stop}]]
    {:http-xhrio
     (merge
      otp-request
      {:uri             (str config/otp-uri
                             "/routers/default/index/stops/"
-                            (stop->gtfs-id stop)
+                            stop-id
                             "/")
       :params          {:apikey config/otp-api-key}
       :on-success      [::events/http-success
-                        [:transit :stops (stop->gtfs-id stop)]]
+                        [:transit :stops stop-id]]
       :on-failure      [::events/http-fail :transit]})}))
 
 ;;; TODO: maybe consider one of
@@ -164,28 +175,23 @@
              :realtime-state rts
              :realtime?      realtime?})))))
 
-(def direction->headsign
-  {"S" "Downtown"
-   "N" "Uptown"})
-
 (def headsign->direction
-  (map-invert
-   {"S" "Downtown"
-    "N" "Uptown"}))
+  {"Downtown" "S"
+   "Uptown" "N"})
 
 (defn fallback->stoptimes
-  [stop {:keys [direction1 direction2]}]
+  [{:keys [agency-id] :as stop} {:keys [direction1 direction2]}]
   (->> [direction1 direction2]
        (mapcat
         (fn [{:keys [name times]}]
-          (let [{:keys [agency-id] :as stop}
-                (->> name
-                     (get headsign->direction)
-                     (hash-map :direction)
-                     (merge stop))]
+          (let [direction (get headsign->direction name)
+                ;; reconstruct this id because
+                stop-id (str (->> stop :stop-id drop-last
+                                  (str/join ""))
+                             direction)]
             (map (fn [{:keys [route minutes]}]
                    {:minutes        minutes
-                    :stop-id        (stop->gtfs-id stop)
+                    :stop-id        stop-id
                     :route-id       (str agency-id ":" route)
                     :realtime-state "SCHEDULED"
                     :realtime?      true})
@@ -209,13 +215,18 @@
            stop-times)))
 
 (re-frame/reg-sub
- ::stop-times-filtered
+ ::stop-times-joined
  :<- [::stop-times]
  :<- [::stop-times-fallback]
- (fn [stop-time-groups [_ {:keys [id]}]]
-   (->> stop-time-groups
-        (apply concat)
-        (filter #(= id (:stop-id %)))
+ (fn [stop-time-groups _]
+   (apply concat stop-time-groups)))
+
+(re-frame/reg-sub
+ ::stop-times-filtered
+ :<- [::stop-times-joined]
+ (fn [stop-times [_ {:keys [stop-id]}]]
+   (->> stop-times
+        (filter #(= stop-id (:stop-id %)))
         (map :minutes)
         (filter pos?)
         (filter (partial > 90))

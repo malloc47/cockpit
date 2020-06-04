@@ -1,7 +1,8 @@
 (ns cockpit.polling
   (:require [cockpit.config :as config]
             [cockpit.events :as events]
-            [cockpit.transit :as transit]))
+            [cockpit.transit :as transit]
+            [clojure.string :as str]))
 
 (def rules
   (vec
@@ -28,15 +29,22 @@
                  :dispatch-event-on-start? true})))
     (->> config/transit-stop-whitelist
          (filter :fallback?)
-         ;; ignore the :id and :direction keys
-         (group-by (juxt :agency-id :stop-id))
+         ;; create a key without the direction for grouping
+         (map #(assoc % :stop (-> %
+                                  :stop-id
+                                  drop-last
+                                  (str/join ""))))
+         ;; ignore the other keys
+         (group-by (juxt :agency-id :stop))
          vals
          (map (partial
                reduce
                (fn [a b]
                  (let [c (merge a b)]
-                   ;; merge :id key into a list of ids
-                   (assoc c :id (flatten [(:id a) (:id b)]))))))
+                   (-> c
+                       ;; merge :id key into a list of ids
+                       (assoc :stop-id (flatten [(:stop-id a) (:stop-id b)]))
+                       (dissoc :stop))))))
          (map (fn [stop]
                 {:interval 30
                  :event [::transit/fetch-stop-times-fallback stop]
