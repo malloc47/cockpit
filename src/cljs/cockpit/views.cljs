@@ -268,7 +268,7 @@
        "Q"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-fallback
+       (->> @(re-frame/subscribe [::transit/stop-times-filtered
                                   (nth config/transit-stop-whitelist 0)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -281,20 +281,7 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-fallback
-                                  (nth config/transit-stop-whitelist 1)])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
-
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
-                          :font-weight "bold"}}
-       "6"]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times
+       (->> @(re-frame/subscribe [::transit/stop-times-filtered
                                   (nth config/transit-stop-whitelist 1)])
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]
@@ -307,25 +294,10 @@
        "6"]]
      [:> Grid {:item true :xs 9}
       [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-fallback
+       (->> @(re-frame/subscribe [::transit/stop-times-filtered
                                   (nth config/transit-stop-whitelist 2)])
             (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
-
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
-                          :font-weight "bold"}}
-       "6"]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times
-                                  (nth config/transit-stop-whitelist 2)])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
-
-     ]]])
+            (str/join ", "))]]]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]

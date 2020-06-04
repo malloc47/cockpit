@@ -5,5 +5,6 @@
    :stocks  {}
    :weather {}
    :covid   nil
-   :transit {:stop-times {}
+   :transit {:stops      {}
+             :stop-times {}
              :routes     {}}})

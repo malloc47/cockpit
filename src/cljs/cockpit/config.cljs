@@ -18,11 +18,13 @@
   [{:id :6N
     :agency-id "MTASBWY"
     :stop-id   "625"
-    :direction "N"}
-   {:id :6S
+    :direction "N"
+    :fallback? false}
+   {:id "MTASBWY:625S"
     :agency-id "MTASBWY"
     :stop-id   "625"
-    :direction "S"}])
+    :direction "S"
+    :fallback? false}])
 
 (def otp-api-key
   "")

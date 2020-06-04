@@ -21,11 +21,13 @@
             :dispatch-event-on-start? true})
          config/stocks)
     (->> config/transit-stop-whitelist
+         (filter (comp not :fallback?))
          (map (fn [stop]
                 {:interval 30
                  :event [::transit/fetch-stop-times stop]
                  :dispatch-event-on-start? true})))
     (->> config/transit-stop-whitelist
+         (filter :fallback?)
          ;; ignore the :id and :direction keys
          (group-by (juxt :agency-id :stop-id))
          vals
@@ -38,4 +40,9 @@
          (map (fn [stop]
                 {:interval 30
                  :event [::transit/fetch-stop-times-fallback stop]
+                 :dispatch-event-on-start? true})))
+    (->> config/transit-stop-whitelist
+         (map (fn [stop]
+                {:interval 604800
+                 :event    [::transit/fetch-stop stop]
                  :dispatch-event-on-start? true}))))))
