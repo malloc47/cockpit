@@ -215,6 +215,45 @@
    (-> db :transit :stop-times)))
 
 (re-frame/reg-sub
+ ::routes-raw
+ (fn [db _]
+   (-> db :transit :routes)))
+
+(re-frame/reg-sub
+ ::stops-raw
+ (fn [db _]
+   (-> db :transit :stops)))
+
+(re-frame/reg-sub
+ ::stops
+ :<- [::stops-raw]
+ (fn [stops _]
+   (->> stops
+        (map (fn [[k {:keys [name] stop-id :id}]]
+               [k {:name    name
+                   :stop-id stop-id}]))
+        (into {}))))
+
+(re-frame/reg-sub
+ ::routes
+ :<- [::routes-raw]
+ (fn [routes _]
+   (->> routes
+        (map (fn [[k {description :desc
+                      color       :color
+                      text-color  :textColor
+                      short-name  :shortName
+                      long-name   :longName
+                      sort-order  :sortOrder}]]
+               [k {:description description
+                   :color       color
+                   :text-color  text-color
+                   :short-name  short-name
+                   :long-name   long-name
+                   :sort-order  sort-order}]))
+        (into {}))))
+
+(re-frame/reg-sub
  ::stop-times
  :<- [::stop-times-raw]
  :<- [::subs/clock]
@@ -242,3 +281,20 @@
         (filter (partial > 90))
         sort
         (take 4))))
+
+(re-frame/reg-sub
+ ::stop-times-processed
+ :<- [::stop-times-joined]
+ :<- [::routes]
+ :<- [::stops]
+ (fn [[stop-times routes stops] _]
+   (->> stop-times
+        (map (fn [{:keys [stop-id route-id] :as stop-time}]
+               (-> stop-time
+                   (assoc :stop (get stops stop-id))
+                   (assoc :route (get routes route-id)))))
+        (group-by #(select-keys % [:route :stop]))
+        (sort-by (juxt (comp :sort-order :route first)
+                       (comp :stop-id :stop first)))
+        (map (fn [[k v]] [k (sort-by :minutes v)]))
+        (into {}))))
