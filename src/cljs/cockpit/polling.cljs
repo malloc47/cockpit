@@ -10,14 +10,14 @@
     [{:interval                 1
       :event                    [::events/timer]
       :dispatch-event-on-start? true}
-     {:interval                 900
+     {:interval                 900 ; 15 minutes
       :event                    [::events/fetch-weather]
       :dispatch-event-on-start? true}
-     {:interval                 3600
+     {:interval                 3600 ; 15 minutes
       :event                    [::events/fetch-covid]
       :dispatch-event-on-start? true}]
     (map (fn [sym]
-           {:interval                 900
+           {:interval                 900 ; 15 minutes
             :event                    [::events/fetch-stocks sym]
             :dispatch-event-on-start? true})
          config/stocks)
@@ -51,6 +51,6 @@
                  :dispatch-event-on-start? true})))
     (->> config/transit-stop-whitelist
          (map (fn [stop]
-                {:interval 604800
+                {:interval 604800 ; 1 week
                  :event    [::transit/fetch-stop stop]
                  :dispatch-event-on-start? true}))))))
