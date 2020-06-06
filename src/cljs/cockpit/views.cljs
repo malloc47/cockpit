@@ -299,6 +299,228 @@
             (map (fn [minutes] (str minutes "m")))
             (str/join ", "))]]]]])
 
+(defn transit2 []
+  [:> Card  {:style {:height "100%"}}
+   [:> CardContent
+    [:> Grid {:container true :spacing 2}
+
+     [:> Grid {:item true :xs 12}
+      [:> Typography {:variant "h6" :color "textSecondary"}
+       "▼ 96 St Downtown"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+
+     [:> Grid {:item true :xs 12}
+      [:> Typography {:variant "h6" :color "textSecondary"}
+       "▼ 96 St Downtown"]]
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]
+
+     [:> Grid {:item true :xs 1}
+      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                          :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+       "Q"]]
+     [:> Grid {:item true :xs 2}
+      [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+       "20m"]]]]])
+
+(defn transit3 []
+  [:> Card  {:style {:height "100%"}}
+   [:> CardContent
+    [:> Grid {:container true :spacing 2}
+     [:> Grid {:item true :xs 4}
+      [:> Grid {:container true :spacing 1}
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+       "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]]]
+
+     [:> Grid {:item true :xs 4}
+      [:> Grid {:container true :spacing 1}
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+       "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]]]
+
+     [:> Grid {:item true :xs 4}
+      [:> Grid {:container true :spacing 1}
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+       "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]
+
+       [:> Grid {:item true :xs 2}
+        [:> Typography {:variant "h5" :color "textSecondary"}
+         "▼"]]
+       [:> Grid {:item true :xs 4}
+        [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
+                            :font-weight "bold" :width "2.5vw" :height "2.5vw"}}
+         "Q"]]
+       [:> Grid {:item true :xs 6}
+        [:> Typography {:variant "h5" :style {:font-size "1.9vw"}}
+         "20m"]]]]]]])
+
 (defn main-panel []
   (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]
     [:> CssBaseline
@@ -320,6 +542,6 @@
 
        [:> Grid card-opts [covid]]
 
-       [:> Grid card-opts [transit]]
+       [:> Grid card-opts [transit2]]
 
-       #_[:> Grid card-opts [cute]]]]]))
+       [:> Grid card-opts [transit3]]]]]))
