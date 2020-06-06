@@ -230,8 +230,11 @@
  (fn [stops _]
    (->> stops
         (map (fn [[k {:keys [name] stop-id :id}]]
-               [k {:name    name
-                   :stop-id stop-id}]))
+               [k {:name      name
+                   :stop-id   stop-id
+                   ;; TODO: the trips have a directionId but the stop
+                   ;; does not :(
+                   :direction (-> stop-id split-stop-id :direction)}]))
         (into {}))))
 
 (re-frame/reg-sub
@@ -282,6 +285,10 @@
         sort
         (take 4))))
 
+(def stop-times-view-filter
+  (-> (every-pred pos? (partial > 90))
+      (comp :minutes)))
+
 (re-frame/reg-sub
  ::stop-times-processed
  :<- [::stop-times-joined]
@@ -289,6 +296,7 @@
  :<- [::stops]
  (fn [[stop-times routes stops] _]
    (->> stop-times
+        (filter stop-times-view-filter) ; view logic
         (map (fn [{:keys [stop-id route-id] :as stop-time}]
                (-> stop-time
                    (assoc :stop (get stops stop-id))
@@ -296,5 +304,6 @@
         (group-by #(select-keys % [:route :stop]))
         (sort-by (juxt (comp :sort-order :route first)
                        (comp :stop-id :stop first)))
-        (map (fn [[k v]] [k (sort-by :minutes v)]))
+        ;; more view logic here
+        (map (fn [[k v]] [k (->> v (sort-by :minutes) (take 4))]))
         (into {}))))
