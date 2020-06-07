@@ -30,10 +30,11 @@
     (->> config/transit-stop-whitelist
          (filter :fallback?)
          ;; create a key without the direction for grouping
-         (map #(assoc % :stop (-> %
-                                  :stop-id
-                                  drop-last
-                                  (str/join ""))))
+         (map #(assoc % :stop (->> %
+                                   :stop-id
+                                   drop-last
+                                   (str/join ""))
+                      :stop-id (list (:stop-id %))))
          ;; ignore the other keys
          (group-by (juxt :agency-id :stop))
          vals
@@ -43,7 +44,7 @@
                  (let [c (merge a b)]
                    (-> c
                        ;; merge :id key into a list of ids
-                       (assoc :stop-id (flatten [(:stop-id a) (:stop-id b)]))
+                       (assoc :stop-id (concat (:stop-id a) (:stop-id b)))
                        (dissoc :stop))))))
          (map (fn [stop]
                 {:interval 30
