@@ -266,32 +266,37 @@
         [:<> {:key (str stop-id "-" route-id)}
 
          [:> Grid {:item true :xs 1}
-          [:> Typography {:variant "h4" :color "textSecondary"}
+          [:> Typography {:variant "h4" :color "textSecondary"
+                          :style {:font-size "2.3vw"}}
            ;; TODO handle nil as no direction
            (if (= direction "S") "▼" "▲")]]
 
          [:> Grid {:item true :xs 2}
+          ;; TODO resize to vw (see previous commit)
           [:> Avatar {:style {:background-color (str "#" color)
                               :color (str "#" text-color)
                               :font-weight "bold"}}
            short-name]]
 
-         ;; TODO: put these in separate grid items?
-         [:> Grid {:item true :xs 9}
-          [:> Typography {:variant "h4"}
-           (map-indexed
-            (fn [idx {:keys [minutes]}]
-              [:span
-               {:key idx
-                :style {:color (if (> minutes 0) "black" "green")}}
-               (if (> minutes 0)
-                 [:<> minutes
-                  [:span
-                   {:style
-                    {:color "rgba(0,0,0,0.54)"}} "m "]]
-                 "Now ")])
-                stop-times)]]])
-          @(re-frame/subscribe [::transit/stop-times-processed]))]]])
+         (->> (concat stop-times (repeat nil))
+              (map-indexed
+               (fn [idx {:keys [minutes] :as stop-time}]
+                 [:<> {:key idx}
+                  [:> Grid {:item true :xs 2}
+                   (when stop-time
+                     [:> Typography
+                      {:variant "h4" :style {:font-size "2.3vw"}}
+                      [:span {:style {:color (if (> minutes 0) "black" "green")}}
+                       (if (> minutes 0)
+                         [:<> minutes
+                          [:span
+                           {:style
+                            {:color "rgba(0,0,0,0.54)"}} "m "]]
+                         "Now ")]])]]))
+              (take 4))
+
+         [:> Grid {:item true :xs 1}]])
+      @(re-frame/subscribe [::transit/stop-times-processed]))]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]
