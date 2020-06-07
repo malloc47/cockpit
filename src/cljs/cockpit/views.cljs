@@ -259,29 +259,38 @@
   [:> Card  {:style {:height "100%"}}
    [:> CardContent
     [:> Grid {:container true :spacing 1}
-     (map (fn [[{{:keys [color text-color short-name route-id]} :route
-                 {:keys [direction stop-id]} :stop}
-                stop-times]]
-            [:<> {:key (str stop-id "-" route-id)}
+     (map
+      (fn [[{{:keys [color text-color short-name route-id]} :route
+             {:keys [direction stop-id]} :stop}
+            stop-times]]
+        [:<> {:key (str stop-id "-" route-id)}
 
-             [:> Grid {:item true :xs 1}
-              [:> Typography {:variant "h4" :color "textSecondary"}
-               (if (= direction "S") "▼" "▲")]]
+         [:> Grid {:item true :xs 1}
+          [:> Typography {:variant "h4" :color "textSecondary"}
+           ;; TODO handle nil as no direction
+           (if (= direction "S") "▼" "▲")]]
 
-             [:> Grid {:item true :xs 2}
-              [:> Avatar {:style {:background-color (str "#" color)
-                                  :color (str "#" text-color)
-                                  :font-weight "bold"}}
-               short-name]]
+         [:> Grid {:item true :xs 2}
+          [:> Avatar {:style {:background-color (str "#" color)
+                              :color (str "#" text-color)
+                              :font-weight "bold"}}
+           short-name]]
 
-             [:> Grid {:item true :xs 9}
-              [:> Typography {:variant "h4"}
-               (->> stop-times
-                    (map (fn [{:keys [minutes]}]
-                           (if (> minutes 0)
-                             (str minutes "m")
-                             "Now")))
-                    (str/join " "))]]])
+         ;; TODO: put these in separate grid items?
+         [:> Grid {:item true :xs 9}
+          [:> Typography {:variant "h4"}
+           (map-indexed
+            (fn [idx {:keys [minutes]}]
+              [:span
+               {:key idx
+                :style {:color (if (> minutes 0) "black" "green")}}
+               (if (> minutes 0)
+                 [:<> minutes
+                  [:span
+                   {:style
+                    {:color "rgba(0,0,0,0.54)"}} "m "]]
+                 "Now ")])
+                stop-times)]]])
           @(re-frame/subscribe [::transit/stop-times-processed]))]]])
 
 (defn main-panel []
