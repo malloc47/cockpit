@@ -259,45 +259,30 @@
   [:> Card  {:style {:height "100%"}}
    [:> CardContent
     [:> Grid {:container true :spacing 1}
+     (map (fn [[{{:keys [color text-color short-name route-id]} :route
+                 {:keys [direction stop-id]} :stop}
+                stop-times]]
+            [:<> {:key (str stop-id "-" route-id)}
 
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4" :color "textSecondary"} "▼"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:style {:background-color "#FCCC0A" :color "#000000"
-                          :font-weight "bold"}}
-       "Q"]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-filtered
-                                  (nth config/transit-stop-whitelist 0)])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
+             [:> Grid {:item true :xs 1}
+              [:> Typography {:variant "h4" :color "textSecondary"}
+               (if (= direction "S") "▼" "▲")]]
 
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4"  :color "textSecondary"} "▲"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
-                          :font-weight "bold"}}
-       "6"]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-filtered
-                                  (nth config/transit-stop-whitelist 1)])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]
+             [:> Grid {:item true :xs 2}
+              [:> Avatar {:style {:background-color (str "#" color)
+                                  :color (str "#" text-color)
+                                  :font-weight "bold"}}
+               short-name]]
 
-     [:> Grid {:item true :xs 1}
-      [:> Typography {:variant "h4"  :color "textSecondary"} "▼"]]
-     [:> Grid {:item true :xs 2}
-      [:> Avatar {:style {:background-color "#00933C" :color "#FFFFFF"
-                          :font-weight "bold"}}
-       "6"]]
-     [:> Grid {:item true :xs 9}
-      [:> Typography {:variant "h4"}
-       (->> @(re-frame/subscribe [::transit/stop-times-filtered
-                                  (nth config/transit-stop-whitelist 2)])
-            (map (fn [minutes] (str minutes "m")))
-            (str/join ", "))]]]]])
+             [:> Grid {:item true :xs 9}
+              [:> Typography {:variant "h4"}
+               (->> stop-times
+                    (map (fn [{:keys [minutes]}]
+                           (if (> minutes 0)
+                             (str minutes "m")
+                             "Now")))
+                    (str/join " "))]]])
+          @(re-frame/subscribe [::transit/stop-times-processed]))]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]

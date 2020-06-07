@@ -12,7 +12,8 @@
                  [clojusc/protobuf "3.6.0-v1.2-SNAPSHOT"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [clj-http "3.10.1"]
-                 [re-pollsive "0.1.0"]]
+                 [re-pollsive "0.1.0"]
+                 [prismatic/plumbing "0.5.5"]]
 
   :plugins [[lein-shadow "0.2.0"]
             [lein-shell "0.5.0"]]

@@ -9,6 +9,7 @@
    [cockpit.events :as events]
    [cockpit.subs :as subs]
    [day8.re-frame.http-fx]
+   [plumbing.core :refer [map-vals map-keys]]
    [re-frame.core :as re-frame]))
 
 ;;; Fallback flow specific to MTA
@@ -45,8 +46,9 @@
        (mapcat
         (fn [{:keys [name times]}]
           (let [direction (get headsign->direction name)
-                ;; reconstruct this id because
-                stop-id (str (->> stop :stop-id drop-last
+                ;; reconstruct this id because we fetched both and
+                ;; need to append the direction to the ID
+                stop-id (str (->> stop :stop-id first drop-last
                                   (str/join ""))
                              direction)]
             (map (fn [{:keys [route minutes]}]
@@ -60,7 +62,8 @@
 (re-frame/reg-event-fx
  ::fetch-stop-times-fallback
  (fn [_ [_ {:keys [stop-id] :as stop}]]
-   (let [{:keys [stop-alias line]} (split-stop-id stop-id)]
+   (let [{:keys [stop-alias line]}
+         (split-stop-id (cond-> stop-id (sequential? stop-id) first))]
      {:http-xhrio
       {:method          :get
        :uri             (str config/fallback-uri
@@ -229,12 +232,13 @@
  :<- [::stops-raw]
  (fn [stops _]
    (->> stops
-        (map (fn [[k {:keys [name] stop-id :id}]]
-               [k {:name      name
-                   :stop-id   stop-id
-                   ;; TODO: the trips have a directionId but the stop
-                   ;; does not :(
-                   :direction (-> stop-id split-stop-id :direction)}]))
+        (map-vals
+         (fn [{:keys [name] stop-id :id}]
+           {:name      name
+            :stop-id   stop-id
+            ;; TODO: the trips have a directionId but the stop
+            ;; does not :(
+            :direction (-> stop-id split-stop-id :direction)}))
         (into {}))))
 
 (re-frame/reg-sub
@@ -242,18 +246,21 @@
  :<- [::routes-raw]
  (fn [routes _]
    (->> routes
-        (map (fn [[k {description :desc
-                      color       :color
-                      text-color  :textColor
-                      short-name  :shortName
-                      long-name   :longName
-                      sort-order  :sortOrder}]]
-               [k {:description description
-                   :color       color
-                   :text-color  text-color
-                   :short-name  short-name
-                   :long-name   long-name
-                   :sort-order  sort-order}]))
+        (map-vals
+         (fn [{route-id    :id
+               description :desc
+               color       :color
+               text-color  :textColor
+               short-name  :shortName
+               long-name   :longName
+               sort-order  :sortOrder}]
+           {:route-id    route-id
+            :description description
+            :color       color
+            :text-color  text-color
+            :short-name  short-name
+            :long-name   long-name
+            :sort-order  sort-order}))
         (into {}))))
 
 (re-frame/reg-sub
@@ -273,21 +280,34 @@
  (fn [stop-time-groups _]
    (apply concat stop-time-groups)))
 
-(re-frame/reg-sub
- ::stop-times-filtered
- :<- [::stop-times-joined]
- (fn [stop-times [_ {:keys [stop-id]}]]
-   (->> stop-times
-        (filter #(= stop-id (:stop-id %)))
-        (map :minutes)
-        (filter pos?)
-        (filter (partial > 90))
-        sort
-        (take 4))))
-
 (def stop-times-view-filter
-  (-> (every-pred pos? (partial > 90))
+  (-> (every-pred nat-int? (partial > 60))
       (comp :minutes)))
+
+(defn roll-up-route
+  "This rolls up multiple routes from individual stops into a single
+  aggregate route. This is useful for cases where we don't care which
+  particular route we hop on at a particular station (say all routes
+  make local stops). Aggregating lets us display all routes in the
+  station as individual times in a single aggregate route."
+  [stop-times]
+  (-> (reduce (fn [route {route2 :route}]
+                (reduce (fn [m k]
+                          (update m k conj (get route2 k)))
+                        route
+                        (keys route)))
+              {:route-id    #{}
+               :description #{}
+               :color       #{}
+               :text-color  #{}
+               :short-name  #{}
+               :long-name   #{}
+               :sort-order  #{}}
+              stop-times)
+      (update :color first)
+      (update :text-color first)
+      (update :short-name (comp (partial str/join "/") sort))
+      (update :sort-order (partial apply min))))
 
 (re-frame/reg-sub
  ::stop-times-processed
@@ -301,9 +321,12 @@
                (-> stop-time
                    (assoc :stop (get stops stop-id))
                    (assoc :route (get routes route-id)))))
-        (group-by #(select-keys % [:route :stop]))
-        (sort-by (juxt (comp :sort-order :route first)
-                       (comp :stop-id :stop first)))
+        ;; Handle the grouping by colored routes or something similar
+        (group-by #(select-keys % [:stop]))
+        (map (fn [[k v]]
+               [(assoc k :route (roll-up-route v))
+                v]))
         ;; more view logic here
-        (map (fn [[k v]] [k (->> v (sort-by :minutes) (take 4))]))
-        (into {}))))
+        (map-vals #(->> % (sort-by :minutes) (take 4)))
+        (sort-by (juxt (comp :sort-order :route first)
+                       (comp :stop-id :stop first))))))
