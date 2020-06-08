@@ -54,8 +54,8 @@
 
 (re-frame/reg-event-db
  ::http-fail
- (fn [db [_ key]]
-   (assoc db key {})))
+ (fn [db [_ key-path]]
+   (assoc-in db key-path {})))
 
 (re-frame/reg-event-fx
  ::fetch-stocks
@@ -72,7 +72,7 @@
      :on-success      [::stocks]
      ;; TODO: this nukes the whole payload even if one of the queries
      ;; is successful
-     :on-failure      [::http-fail :stocks]}}))
+     :on-failure      [::http-fail [:stocks]]}}))
 
 (re-frame/reg-event-fx
  ::fetch-weather
@@ -86,7 +86,7 @@
               :appid config/open-weather-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
      :on-success      [::http-success :weather]
-     :on-failure      [::http-fail :weather]}}))
+     :on-failure      [::http-fail [:weather]]}}))
 
 (re-frame/reg-event-fx
  ::fetch-covid
@@ -96,4 +96,4 @@
      :uri    "https://data.cityofnewyork.us/resource/rc75-m7u3.json"
      :response-format (ajax/json-response-format {:keywords? true})
      :on-success      [::http-success :covid]
-     :on-failure      [::http-fail :covid]}}))
+     :on-failure      [::http-fail [:covid]]}}))
