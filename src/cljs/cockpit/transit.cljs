@@ -23,10 +23,6 @@
      :line       line
      :direction  direction}))
 
-(defn stop->gtfs-id
-  [{:keys [agency-id stop-id direction]}]
-  (str agency-id ":" stop-id direction))
-
 (defn fallback->route-ids
   [fallback]
   (->> fallback
@@ -39,6 +35,10 @@
 (def headsign->direction
   {"Downtown" "S"
    "Uptown" "N"})
+
+(def direction->direction-id
+  {"S" "1"
+   "N" "0"})
 
 (defn fallback->stoptimes
   [{:keys [agency-id] :as stop} {:keys [direction1 direction2]}]
@@ -56,7 +56,8 @@
                     :stop-id        stop-id
                     :route-id       (str agency-id ":" route)
                     :realtime-state "SCHEDULED"
-                    :realtime?      true})
+                    :realtime?      true
+                    :direction-id   (get direction->direction-id direction)})
                  times))))))
 
 (re-frame/reg-event-fx
@@ -74,8 +75,10 @@
        ;; :id will be an array and the payload will be duplicated in the
        ;; db which will match the shape of the OTP-based transit query
        ;; which is separated by direction
-       :on-success      [::persist-stop-times [:transit-fallback :stop-times stop]]
-       :on-failure      [::events/http-fail :transit-fallback]}})))
+       :on-success      [::persist-stop-times
+                         [:transit-fallback :stop-times stop]]
+       :on-failure      [::events/http-fail
+                         [:transit-fallback :stop-times stop]]}})))
 
 (re-frame/reg-sub
  ::stop-times-raw-fallback
@@ -122,7 +125,8 @@
               stop-id        :stopId
               {route-id :id} :route
               rts            :realtimeState
-              realtime?      :realtime}]
+              realtime?      :realtime
+              direction-id   :directionId}]
           {:minutes        (-> time (+ day) (* 1e3)
                                time-coerce/from-long
                                (->> (safe-interval now))
@@ -132,7 +136,8 @@
            :stop-id        stop-id
            :route-id       route-id
            :realtime-state rts
-           :realtime?      realtime?}))))
+           :realtime?      realtime?
+           :direction-id   direction-id}))))
 
 (def otp-request
   {:method          :get
@@ -151,9 +156,9 @@
                             stop-id
                             "/stoptimes")
       :params          {:apikey    config/otp-api-key
-                        :timeRange 7200}
+                        #_#_:timeRange 7200}
       :on-success      [::persist-stop-times [:transit :stop-times stop]]
-      :on-failure      [::events/http-fail :transit]})}))
+      :on-failure      [::events/http-fail [:transit :stop-times stop]]})}))
 
 (re-frame/reg-event-fx
  ::fetch-route
@@ -167,9 +172,7 @@
                             "/")
       :params          {:apikey config/otp-api-key}
       :on-success      [::events/http-success [:transit :routes route-id]]
-      ;; TODO: this nukes the whole payload even if one of the queries
-      ;; is successful
-      :on-failure      [::events/http-fail :transit]})}))
+      :on-failure      [::events/http-fail [:transit :routes route-id]]})}))
 
 (re-frame/reg-event-fx
  ::fetch-stop
@@ -184,7 +187,8 @@
       :params          {:apikey config/otp-api-key}
       :on-success      [::events/http-success
                         [:transit :stops stop-id]]
-      :on-failure      [::events/http-fail :transit]})}))
+      :on-failure      [::events/http-fail
+                        [:transit :stops stop-id]]})}))
 
 ;;; TODO: maybe consider one of
 ;;; https://github.com/Day8/re-frame-async-flow-fx
@@ -234,11 +238,13 @@
    (->> stops
         (map-vals
          (fn [{:keys [name] stop-id :id}]
-           {:name      name
-            :stop-id   stop-id
-            ;; TODO: the trips have a directionId but the stop
-            ;; does not :(
-            :direction (-> stop-id split-stop-id :direction)}))
+           {:name         name
+            :stop-id      stop-id
+            ;; lookup the whitelisted direction from config
+            :direction-id (->> config/transit-stop-whitelist
+                               (filter (comp (partial = stop-id) :stop-id))
+                               first
+                               :direction-id)}))
         (into {}))))
 
 (re-frame/reg-sub
@@ -280,10 +286,6 @@
  (fn [stop-time-groups _]
    (apply concat stop-time-groups)))
 
-(def stop-times-view-filter
-  (-> (every-pred nat-int? (partial > 60))
-      (comp :minutes)))
-
 (defn roll-up-route
   "This rolls up multiple routes from individual stops into a single
   aggregate route. This is useful for cases where we don't care which
@@ -309,6 +311,10 @@
       (update :short-name (comp (partial str/join "/") sort))
       (update :sort-order (partial apply min))))
 
+(def stop-times-view-filter
+  (-> (every-pred nat-int? (partial > 60))
+      (comp :minutes)))
+
 (re-frame/reg-sub
  ::stop-times-processed
  :<- [::stop-times-joined]
@@ -327,6 +333,14 @@
                [(assoc k :route (roll-up-route v))
                 v]))
         ;; more view logic here
-        (map-vals #(->> % (sort-by :minutes) (take 4)))
+        (map-vals #(->> %
+                        (filter
+                         (fn [{:keys [direction-id]
+                               {stop-direction-id :direction-id} :stop}]
+                           (or
+                            (= direction-id stop-direction-id)
+                            (nil? stop-direction-id))))
+                        (sort-by :minutes)
+                        (take 4)))
         (sort-by (juxt (comp :sort-order :route first)
                        (comp :stop-id :stop first))))))
