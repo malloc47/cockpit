@@ -3,13 +3,13 @@
    [ajax.core :as ajax]
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
-   [clojure.set :refer [difference map-invert]]
+   [clojure.set :refer [difference]]
    [clojure.string :as str]
    [cockpit.config :as config]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
    [day8.re-frame.http-fx]
-   [plumbing.core :refer [map-vals map-keys]]
+   [plumbing.core :refer [map-vals]]
    [re-frame.core :as re-frame]))
 
 ;;; Fallback flow specific to MTA
@@ -240,7 +240,6 @@
          (fn [{:keys [name] stop-id :id}]
            {:name         name
             :stop-id      stop-id
-            ;; lookup the whitelisted direction from config
             :direction-id (->> config/transit-stop-whitelist
                                (filter (comp (partial = stop-id) :stop-id))
                                first
@@ -307,7 +306,7 @@
                :sort-order  #{}}
               stop-times)
       (update :color first)
-      (update :text-color first)
+      (update :text-color (partial apply max))
       (update :short-name (comp (partial str/join "/") sort))
       (update :sort-order (partial apply min))))
 
