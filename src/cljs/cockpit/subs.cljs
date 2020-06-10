@@ -1,9 +1,9 @@
 (ns cockpit.subs
   (:require
-   [re-frame.core :as re-frame]
+   [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [cljs-time.format :as time-format]
-   [cljs-time.coerce :as time-coerce]))
+   [re-frame.core :as re-frame]))
 
 (defn db->date-sub
   [format-map]

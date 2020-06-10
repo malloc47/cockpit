@@ -1,12 +1,11 @@
 (ns cockpit.events
   (:require
-   [re-frame.core :as re-frame]
-   [cockpit.db :as db]
+   [ajax.core :as ajax]
    [cockpit.config :as config]
-   [clojure.string :as str]
-   [day8.re-frame.tracing :refer-macros [fn-traced]]
+   [cockpit.db :as db]
    [day8.re-frame.http-fx]
-   [ajax.core :as ajax]))
+   [day8.re-frame.tracing :refer-macros [fn-traced]]
+   [re-frame.core :as re-frame]))
 
 
 (re-frame/reg-event-db
