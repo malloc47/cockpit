@@ -12,7 +12,6 @@
                                 CssBaseline Paper Typography ThemeProvider]]
    ["react-sparklines" :refer [Sparklines SparklinesLine
                                SparklinesReferenceLine dataProcessing]]
-   ["@material-ui/core/styles" :refer [makeStyles]]
    ["@material-ui/core/colors/green" :default green]
    ["@material-ui/core/colors/lightBlue" :default lightBlue]
    ["react-vega" :refer [VegaLite]]))
@@ -23,45 +22,37 @@
 (defn clock []
   [:> Card {:style {:height "100%"}}
    [:> CardContent
-    [:> Typography {:align "center" :variant "h1" :style {:font-size "6vw"}}
+    [:> Typography {:align "center" :variant "h1"}
      @(re-frame/subscribe [::subs/time])]
-    [:> Typography {:align "center" :variant "h2" :style {:font-size "3vw"}}
+    [:> Typography {:align "center" :variant "h4"}
      @(re-frame/subscribe [::subs/day])]
     [:> Grid {:container true :spacing 0 :direction "row"
               :justify "center" :alignItems "center"}
      [:> Grid {:item true :xs 6}
-      [:> Typography {:align "center" :variant "h3"
-                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "h6"
+                      :style {:margin-top "0.5em"}}
        @(re-frame/subscribe [::subs/time-pt])]
-      [:> Typography {:align "center" :variant "h3" :color "textSecondary"
-                      :style {:font-size "1vw" :margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "body2" :color "textSecondary"
+                      :style {:margin-top "0.5em"}}
        "San Francisco"]]
      [:> Grid {:item true :xs 6}
-      [:> Typography {:align "center" :variant "h3"
-                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "h6"
+                      :style {:margin-top "0.5em"}}
        @(re-frame/subscribe [::subs/time-ct])]
-      [:> Typography {:align "center" :variant "h3" :color "textSecondary"
-                      :style {:font-size "1vw" :margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "body2" :color "textSecondary"
+                      :style {:margin-top "0.5em"}}
        "Chicago"]]]
     (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::subs/sun])]
       [:> Typography {:align "center"
-                      :variant "h3"
-                      :style {:font-size "1.5vw" :margin-top "0.5em"}}
+                      :variant "h6"
+                      :style {:margin-top "0.5em"}}
        [:i {:class (str "wi wi-sunrise") :style {:color (get accent-scheme "600")}}]
        sunrise
        (gstring/unescapeEntities "&#8194;")
        [:i {:class (str "wi wi-sunset") :style {:color (get accent-scheme "600")}}]
        sunset])]])
 
-(defn cute []
-  [:> Card  {:style {:height "100%"}}
-   [:> CardActionArea
-    [:> CardMedia
-     {:image "https://icatcare.org/app/uploads/2018/07/Thinking-of-getting-a-cat.png"
-      :style {:height "300px"}}]]
-   [:> CardContent "A Cat."]])
-
-(def sparkline-height 50)
+(def sparkline-height 30)
 
 (defn correct-reference-line
   "The 'custom' option for SparklinesReferenceLine is not wired through
@@ -94,14 +85,11 @@
       (name symbol) " "]
      [:> Typography {:variant "h6"
                      :display "inline"}
-      (last data)]
-     [:> Typography {:variant "body1"
-                     :display "inline"
-                     :color "textSecondary"}
-      " USD "]
+      "$" (last data)]
      [:> Typography {:variant "body1"
                      :display "inline"
                      :style {:color color}}
+      (gstring/unescapeEntities "&nbsp;")
       diff-display " (" percent "%) " (if up? "▲" "▼")]
      [:> Sparklines {:data (or data []) :height sparkline-height :margin 0}
       [:> SparklinesLine {:color color}]
@@ -113,45 +101,25 @@
 
 (defn weather [symbol]
   (let [weather @(re-frame/subscribe [::subs/weather])]
-    [:div
-     [:> Typography {:variant "h5"
-                     :color "textSecondary"
-                     :style {:font-size "1.5vw"
-                             :margin-bottom "0.5em"}}
-      "New York, NY"]
-
+    [:<>
      [:> Grid {:container true :spacing 0 :direction "row"
                :justify "center" :alignItems "center"}
       [:> Grid {:item true :xs 3}
-       [:i {:class (str "wi wi-" (weather/request->icon weather))
-            :style {:color (get color-scheme "400")
-                    :font-size "5vw"}}]
-       #_[:img {:src (weather/open-weather-api-icon
-                    (-> weather :current :weather first :icon))}]]
-      [:> Grid {:item true :xs 4 :style {:text-align "center"}}
+       [:> Typography {:variant "h1"}
+        [:i {:class (str "wi wi-" (weather/request->icon weather))
+             :style {:color (get color-scheme "400")}}]]]
+      [:> Grid {:item true :xs 5 :style {:text-align "center"}}
        [:> Typography {:align "center" :variant "h1"
                        :display "inline"
-                       :style {:font-size "5vw" :margin-top "0.1em"}}
+                       :style {:margin-top "0.1em"}}
         (-> weather :current :temp int) "°"]]
       [:> Grid {:item true :xs 2}
        (let [{low :min high :max} (-> weather :daily first :temp)]
-         [:> Typography {:align "left" :display "inline"
-                         :variant "h2" :style {:font-size "2vw"}}
+         [:> Typography {:align "right" :display "inline"
+                         :variant "h4" :style {:float "right"}}
           (int high) "°"
           [:br]
-          (int low) "°"])]
-
-      #_[:> Grid {:item true :xs 3}
-       (let [{:keys [morn day eve night]} (-> weather :daily first :temp)]
-         [:> Typography {:align "left" :display "inline"
-                         :variant "h2" :style {:font-size "1vw"}}
-          "Mor: " (int morn) "°"
-          [:br]
-          "Day: " (int day) "°"
-          [:br]
-          "Eve: " (int eve) "°"
-          [:br]
-          "Ngt: " (int night) "°"])]]
+          (int low) "°"])]]
 
      (let [humidity    (-> weather :current :humidity)
            feels-like  (some-> weather :current :feels_like int)
@@ -179,8 +147,7 @@
                      [])))
             (remove empty?)
             (interpose [" | "])
-            (apply concat [:> Typography {:align "center" :color "textSecondary"
-                                          :style {:font-size "1.1vw"}}])
+            (apply concat [:> Typography {:align "center" :color "textSecondary"}])
             vec))
 
      [:> Grid {:container true :spacing 1 :direction "row"
@@ -195,24 +162,26 @@
          ^{:key date}
          [:> Grid {:item true :xs 2}
           [:> Typography {:key date
+                          :variant "body1"
                           :align "center"
-                          :style {:font-size "1vw"
-                                  :margin-bottom "0.5em"}}
+                          :style {:margin-bottom "0.5em"}}
            (-> date subs/epoch->local-date .getWeekday weather/number->weekday)]
-          [:> Typography {:align "center"}
+          [:> Typography {:align "center" :variant "h5"}
            [:i {:class (str "wi wi-" (weather/id->icon icon-id))
-                :style {:font-size "2vw"
-                        :color (get accent-scheme "600")}}]]
-          [:> Typography {:align "center" :style {:font-size "1vw"}}
+                :style {:color (get accent-scheme "600")}}]]
+          [:> Typography {:align "center" :variant "subtitle2"}
            (int high) "°"
            (gstring/unescapeEntities "&#8194;")
            [:span {:style {:color "rgb(132, 132, 132)"}} (int low) "°"]
            [:span {:style {:color (get accent-scheme "600")}}
             (when rain
-              (list " " (some-> rain mm->in (round 1)) "\""))]
+              [:<>
+               [:br]
+               (list " " (some-> rain mm->in (round 1)) "\"")])]
            [:span {:style {:color "red"}}
             (when snow
-              (list " " (some-> snow mm->in (round 1)) "\""))]]])
+              [:<>
+               (list " " (some-> snow mm->in (round 1)) "\"")])]]])
        (->> weather :daily rest (take 6)))]]))
 
 (defn covid []
@@ -255,21 +224,30 @@
                              last
                              :y)]])]])
 
+(def direction-id->arrow
+  {"0" "▲"
+   "1" "▼"
+   nil ""})
+
 (defn transit []
   [:> Card  {:style {:height "100%"}}
    [:> CardContent
     [:> Grid {:container true :spacing 1}
      (map
       (fn [[{{:keys [color text-color short-name route-id]} :route
-             {:keys [direction stop-id]} :stop}
+             {:keys [direction-id stop-id]} :stop}
             stop-times]]
         [:<> {:key (str stop-id "-" route-id)}
 
          [:> Grid {:item true :xs 1}
-          [:> Typography {:variant "h4" :color "textSecondary"
-                          :style {:font-size "2.3vw"}}
+          [:> Typography {:variant "h4" :color "textSecondary"}
            ;; TODO handle nil as no direction
-           (if (= direction "S") "▼" "▲")]]
+           (if (->> config/transit-stop-whitelist
+                    (filter (comp (partial = stop-id) :stop-id))
+                    first
+                    :swap-direction?)
+             (get direction-id->arrow (get {"0" "1" "1" "0"} direction-id) "")
+             (get direction-id->arrow direction-id ""))]]
 
          [:> Grid {:item true :xs 2}
           ;; TODO resize to vw (see previous commit)
@@ -285,7 +263,7 @@
                   [:> Grid {:item true :xs 2}
                    (when stop-time
                      [:> Typography
-                      {:variant "h4" :style {:font-size "2.3vw"}}
+                      {:variant "h5" :style {:font-size "1.9rem"}}
                       [:span {:style {:color (if (> minutes 0) "black" "green")}}
                        (if (> minutes 0)
                          [:<> minutes
@@ -299,7 +277,7 @@
       @(re-frame/subscribe [::transit/stop-times-processed]))]]])
 
 (defn main-panel []
-  (let [card-opts {:item true :xs 4 :sm 4 :md 4  :lg 4}]
+  (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
     [:> CssBaseline
      [:> Container {:maxWidth false}
       [:> Grid {:container true :spacing 1}
@@ -310,6 +288,8 @@
 
        [:> Grid card-opts [clock]]
 
+       [:> Grid card-opts [transit]]
+
        [:> Grid card-opts
         [:> Card  {:style {:height "100%"}}
          [:> CardContent
@@ -317,8 +297,4 @@
            [:<>]
            (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]]]
 
-       [:> Grid card-opts [covid]]
-
-       [:> Grid card-opts [transit]]
-
-       #_[:> Grid card-opts [cute]]]]]))
+       [:> Grid card-opts [covid]]]]]))
