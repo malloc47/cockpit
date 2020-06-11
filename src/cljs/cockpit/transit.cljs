@@ -93,18 +93,6 @@
              (fallback->stoptimes stop times))
            stop-times)))
 
-;;;
-
-(defn safe-interval
-  "The local clock and the OTP instance clock are not guaranteed to be
-  in sync, and in practice the OTP instance provides times ahead of
-  local clock. Instead of blowing up, this swallows these errors."
-  [a b]
-  (try
-    (time/interval a b)
-    (catch js/Object e
-      (time/interval b b))))
-
 ;;; Open Trip Planner (OTP) index API
 ;;;
 ;;; http://dev.opentripplanner.org/apidoc/1.4.0/resource_IndexAPI.html
@@ -129,7 +117,7 @@
               direction-id   :directionId}]
           {:minutes        (-> time (+ day) (* 1e3)
                                time-coerce/from-long
-                               (->> (safe-interval now))
+                               (->> (subs/safe-interval now))
                                time/in-seconds
                                (/ 60)
                                js/Math.ceil)
@@ -206,9 +194,12 @@
          ;; only fetch them once
          route-ids          (->> (difference new-route-ids
                                              existing-route-ids)
-                                 (remove nil?))]
+                                 (remove nil?))
+         stop-id (-> key-path last :stop-id)]
      { ;; attach the raw requests to the db
-      :db (assoc-in db key-path stop-times)
+      :db (-> db
+              (assoc-in key-path stop-times)
+              (events/assoc-in-all [:transit :update-times stop-id] (js/Date.)))
       ;; fire requests for the routes listed in the payload
       :dispatch-n (map (fn [route-id]
                          [::fetch-route route-id])
@@ -220,6 +211,11 @@
  ::stop-times-raw
  (fn [db _]
    (-> db :transit :stop-times)))
+
+(re-frame/reg-sub
+ ::stop-times-update-times
+ (fn [db _]
+   (-> db :transit :update-times)))
 
 (re-frame/reg-sub
  ::routes-raw
@@ -276,6 +272,20 @@
    (let [now (time-coerce/from-date clock)]
      (->> stop-times vals (apply concat)
           (mapcat (partial gtfs->stoptimes now))))))
+
+(re-frame/reg-sub
+ ::stop-times-update-interval
+ :<- [::subs/clock]
+ :<- [::stop-times-update-times]
+ (fn [[clock update-times] _]
+   (->> update-times
+        vals
+        (map (fn [update-time]
+               (subs/safe-interval
+                (time-coerce/from-date update-time)
+                (time-coerce/from-date clock))))
+        (apply max-key time/in-minutes)
+        subs/format-interval)))
 
 (re-frame/reg-sub
  ::stop-times-joined

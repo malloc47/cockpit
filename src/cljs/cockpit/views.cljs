@@ -78,7 +78,7 @@
         diff-display (str (if (>= diff 0) "+" "") diff)
         percent      (round (* (- 1 (/ (first data) (last data))) 100))
         color        (if up? "green" "red")]
-    [:div
+    [:<>
      [:> Typography {:variant "body1"
                      :display "inline"
                      :color "textSecondary"}
@@ -99,7 +99,18 @@
                 :strokeOpacity 0.75
                 :strokeDasharray "1, 3" }}]]]))
 
-(defn weather [symbol]
+(defn stocks
+  []
+  [:> Card  {:style {:height "100%"}}
+   [:> CardContent
+    (into
+     [:<>]
+     (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))
+    [:div {:style {:float "right"}}
+      [:> Typography {:variant "body2" :color "textSecondary"}
+       @(re-frame/subscribe [::subs/stocks-update-time])]]]])
+
+(defn weather []
   (let [weather @(re-frame/subscribe [::subs/weather])]
     [:<>
      [:> Grid {:container true :spacing 0 :direction "row"
@@ -182,7 +193,10 @@
             (when snow
               [:<>
                (list " " (some-> snow mm->in (round 1)) "\"")])]]])
-       (->> weather :daily rest (take 6)))]]))
+       (->> weather :daily rest (take 6)))]
+     [:div {:style {:float "right"}}
+      [:> Typography {:variant "body2" :color "textSecondary"}
+       @(re-frame/subscribe [::subs/weather-update-time])]]]))
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
@@ -232,7 +246,7 @@
 (defn transit []
   [:> Card  {:style {:height "100%"}}
    [:> CardContent
-    [:> Grid {:container true :spacing 1}
+    [:> Grid {:container true :spacing 1 :alignItems "center"}
      (map
       (fn [[{{:keys [color text-color short-name route-id]} :route
              {:keys [direction-id stop-id]} :stop}
@@ -274,7 +288,12 @@
               (take 4))
 
          [:> Grid {:item true :xs 1}]])
-      @(re-frame/subscribe [::transit/stop-times-processed]))]]])
+
+      @(re-frame/subscribe [::transit/stop-times-processed]))]
+
+    [:div {:style {:float "right"}}
+     [:> Typography {:variant "body2" :color "textSecondary"}
+      @(re-frame/subscribe [::transit/stop-times-update-interval])]]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
@@ -290,11 +309,6 @@
 
        [:> Grid card-opts [transit]]
 
-       [:> Grid card-opts
-        [:> Card  {:style {:height "100%"}}
-         [:> CardContent
-          (into
-           [:<>]
-           (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]]]
+       [:> Grid card-opts [stocks]]
 
        [:> Grid card-opts [covid]]]]]))

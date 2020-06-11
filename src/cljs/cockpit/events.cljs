@@ -24,7 +24,9 @@
    (let [symbol (-> result
                     (get "Meta Data")
                     (get "2. Symbol"))]
-     (assoc-in db [:stocks (keyword symbol)] result))))
+     (-> db
+         (assoc-in [:stocks (keyword symbol)] result)
+         (assoc-in [:stocks :update-time] (js/Date.))))))
 
 (defn explode-nested
   "Explode the values from nested seqs into multiple collections"

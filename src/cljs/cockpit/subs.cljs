@@ -3,12 +3,39 @@
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [cljs-time.format :as time-format]
+   [clojure.string :as str]
    [re-frame.core :as re-frame]))
+
+(defn safe-interval
+  "The local clock and the OTP instance clock are not guaranteed to be
+  in sync, and in practice the OTP instance provides times ahead of
+  local clock. Instead of blowing up, this swallows these errors."
+  [a b]
+  (try
+    (time/interval a b)
+    (catch js/Object e
+      (time/interval b b))))
+
+(defn format-interval
+  [interval]
+  (let [base-seconds (time/in-seconds interval)
+        seconds      (mod base-seconds 60)
+        minutes      (-> base-seconds (/ 60) (mod 60) int)
+        hours        (-> base-seconds (/ (* 60 60)) int)]
+    (or
+     (->> [hours minutes seconds]
+          (remove zero?)
+          reverse
+          (map #(str %2 %1) ["s" "m" "h"])
+          reverse
+          (str/join " ")
+          not-empty)
+     "0s")))
 
 (defn db->date-sub
   [format-map]
   (fn [clock _]
-   (.toLocaleTimeString clock [] (clj->js format-map))))
+    (.toLocaleTimeString clock [] (clj->js format-map))))
 
 (re-frame/reg-sub
  ::clock
@@ -90,10 +117,21 @@
  ::stocks-sparkline
  :<- [::stocks]
  (fn [stocks _]
-   (->> stocks
+   ;; TODO: a bit annoying to have to dissoc this
+   (->> (dissoc stocks :update-time)
         (map (fn [[symbol api-result]]
                [symbol (convert-alpha-vantage-to-sparkline api-result)]))
         (into {}))))
+
+(re-frame/reg-sub
+ ::stocks-update-time
+ :<- [::clock]
+ :<- [::stocks]
+ (fn [[clock {:keys [update-time]}] _]
+   (format-interval
+    (safe-interval
+     (time-coerce/from-date update-time)
+     (time-coerce/from-date clock)))))
 
 (re-frame/reg-sub
  ::weather
@@ -106,6 +144,16 @@
  (fn [{{:keys [sunrise sunset]} :current} _]
    {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
     :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
+
+(re-frame/reg-sub
+ ::weather-update-time
+ :<- [::clock]
+ :<- [::weather]
+ (fn [[clock {{:keys [dt]} :current}] _]
+   (format-interval
+    (safe-interval
+     (time-coerce/from-long (* 1000 dt))
+     (time-coerce/from-date clock)))))
 
 (re-frame/reg-sub
  ::covid
