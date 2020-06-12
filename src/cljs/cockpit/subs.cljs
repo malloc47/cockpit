@@ -77,13 +77,6 @@
   [date]
   (->> 1 time/days (time/minus date)))
 
-(defn epoch->local-date
-  [epoch]
-  (-> epoch
-      (* 1000)
-      time-coerce/from-long
-      time/to-default-time-zone))
-
 (defn convert-alpha-vantage-to-sparkline
   [av]
   (let [full-list
@@ -131,28 +124,6 @@
    (format-interval
     (safe-interval
      (time-coerce/from-date update-time)
-     (time-coerce/from-date clock)))))
-
-(re-frame/reg-sub
- ::weather
- (fn [db _]
-   (:weather db)))
-
-(re-frame/reg-sub
- ::sun
- :<- [::weather]
- (fn [{{:keys [sunrise sunset]} :current} _]
-   {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
-    :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
-
-(re-frame/reg-sub
- ::weather-update-time
- :<- [::clock]
- :<- [::weather]
- (fn [[clock {{:keys [dt]} :current}] _]
-   (format-interval
-    (safe-interval
-     (time-coerce/from-long (* 1000 dt))
      (time-coerce/from-date clock)))))
 
 (re-frame/reg-sub

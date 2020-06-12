@@ -2,6 +2,7 @@
   (:require [cockpit.config :as config]
             [cockpit.events :as events]
             [cockpit.transit :as transit]
+            [cockpit.weather :as weather]
             [clojure.string :as str]))
 
 (def rules
@@ -11,7 +12,7 @@
       :event                    [::events/timer]
       :dispatch-event-on-start? true}
      {:interval                 900 ; 15 minutes
-      :event                    [::events/fetch-weather]
+      :event                    [::weather/fetch-weather]
       :dispatch-event-on-start? true}
      {:interval                 3600 ; 15 minutes
       :event                    [::events/fetch-covid]

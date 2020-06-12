@@ -1,4 +1,13 @@
-(ns cockpit.weather)
+(ns cockpit.weather
+  (:require
+   [ajax.core :as ajax]
+   [cljs-time.coerce :as time-coerce]
+   [cljs-time.core :as time]
+   [cockpit.config :as config]
+   [cockpit.events :as events]
+   [cockpit.subs :as subs]
+   [day8.re-frame.http-fx]
+   [re-frame.core :as re-frame]))
 
 ;;; Transliterated from https://github.com/erikflowers/weather-icons/issues/204
 
@@ -35,6 +44,53 @@
   [mm]
   (* mm 0.0393701))
 
+(defn epoch->local-date
+  [epoch]
+  (-> epoch
+      (* 1000)
+      time-coerce/from-long
+      time/to-default-time-zone))
+
 (defn open-weather-api-icon
   [code]
   (str "http://openweathermap.org/img/wn/" code "@2x.png"))
+
+;;; Events
+
+(re-frame/reg-event-fx
+ ::fetch-weather
+ (fn [_ _]
+   {:http-xhrio
+    {:method :get
+     :uri    "http://api.openweathermap.org/data/2.5/onecall"
+     :params {:lat   (:lat config/home)
+              :lon   (:lon config/home)
+              :units "imperial"
+              :appid config/open-weather-api-key}
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::events/http-success :weather]
+     :on-failure      [::events/http-fail [:weather]]}}))
+
+;;; Subs
+
+(re-frame/reg-sub
+ ::weather
+ (fn [db _]
+   (:weather db)))
+
+(re-frame/reg-sub
+ ::sun
+ :<- [::weather]
+ (fn [{{:keys [sunrise sunset]} :current} _]
+   {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
+    :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
+
+(re-frame/reg-sub
+ ::weather-update-time
+ :<- [::subs/clock]
+ :<- [::weather]
+ (fn [[clock {{:keys [dt]} :current}] _]
+   (subs/format-interval
+    (subs/safe-interval
+     (time-coerce/from-long (* 1000 dt))
+     (time-coerce/from-date clock)))))

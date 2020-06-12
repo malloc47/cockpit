@@ -48,7 +48,7 @@
       [:> Typography {:align "center" :variant "body2" :color "textSecondary"
                       :style {:margin-top "0.5em"}}
        "Chicago"]]]
-    (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::subs/sun])]
+    (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::weather/sun])]
       [:> Typography {:align "center"
                       :variant "h6"
                       :style {:margin-top "0.5em"}}
@@ -117,7 +117,7 @@
        @(re-frame/subscribe [::subs/stocks-update-time])]]]])
 
 (defn weather []
-  (let [weather @(re-frame/subscribe [::subs/weather])]
+  (let [weather @(re-frame/subscribe [::weather/weather])]
     [:<>
      [:> Grid {:container true :spacing 0 :direction "row"
                :justify "center" :alignItems "center"}
@@ -182,7 +182,7 @@
                           :variant "body1"
                           :align "center"
                           :style {:margin-bottom "0.5em"}}
-           (-> date subs/epoch->local-date .getWeekday weather/number->weekday)]
+           (-> date weather/epoch->local-date .getWeekday weather/number->weekday)]
           [:> Typography {:align "center" :variant "h5"}
            [:i {:class (str "wi wi-" (weather/id->icon icon-id))
                 :style {:color (get accent-scheme "600")}}]]
@@ -202,7 +202,7 @@
        (->> weather :daily rest (take 6)))]
      [:div {:style {:float "right"}}
       [:> Typography {:variant "body2" :color "textSecondary"}
-       @(re-frame/subscribe [::subs/weather-update-time])]]]))
+       @(re-frame/subscribe [::weather/weather-update-time])]]]))
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
@@ -305,7 +305,8 @@
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
     [:> CssBaseline
      [:> Container {:maxWidth false}
-      [:> Grid {:container true :spacing 1}
+      [:> Grid {:container true :spacing 1
+                :style {:padding-top "5px"}}
 
        [:> Grid card-opts
         [:> Card  {:style {:height "100%"}}

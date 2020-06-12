@@ -76,20 +76,6 @@
      :on-failure      [::http-fail [:stocks]]}}))
 
 (re-frame/reg-event-fx
- ::fetch-weather
- (fn [_ _]
-   {:http-xhrio
-    {:method :get
-     :uri    "http://api.openweathermap.org/data/2.5/onecall"
-     :params {:lat   (:lat config/home)
-              :lon   (:lon config/home)
-              :units "imperial"
-              :appid config/open-weather-api-key}
-     :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :weather]
-     :on-failure      [::http-fail [:weather]]}}))
-
-(re-frame/reg-event-fx
  ::fetch-covid
  (fn [_ _]
    {:http-xhrio
