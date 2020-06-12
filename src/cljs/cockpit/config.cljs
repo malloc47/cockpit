@@ -9,8 +9,13 @@
 (def alpha-vantage-api-key
   "")
 
-(def lat 1)
-(def lon 1)
+(def home
+  {:lat 1
+   :lon 1})
+
+(def work
+  {:lat 1
+   :lon 1})
 
 (def stocks ["AAPL" "IBM"])
 

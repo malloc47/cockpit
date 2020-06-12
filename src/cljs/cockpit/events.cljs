@@ -81,8 +81,8 @@
    {:http-xhrio
     {:method :get
      :uri    "http://api.openweathermap.org/data/2.5/onecall"
-     :params {:lat   config/lat
-              :lon   config/lon
+     :params {:lat   (:lat config/home)
+              :lon   (:lon config/home)
               :units "imperial"
               :appid config/open-weather-api-key}
      :response-format (ajax/json-response-format {:keywords? true})
