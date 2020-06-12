@@ -24,7 +24,7 @@
         hours        (-> base-seconds (/ (* 60 60)) int)]
     (or
      (->> [hours minutes seconds]
-          (remove zero?)
+          (drop-while zero?)
           reverse
           (map #(str %2 %1) ["s" "m" "h"])
           reverse
