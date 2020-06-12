@@ -336,6 +336,8 @@
                (-> stop-time
                    (assoc :stop (get stops stop-id))
                    (assoc :route (get routes route-id)))))
+        ;; Make this an inner join
+        (filter (every-pred :stop :route))
         ;; Handle the grouping by colored routes or something similar
         (group-by #(select-keys % [:stop]))
         (map (fn [[k v]]
