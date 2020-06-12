@@ -22,9 +22,11 @@
 (defn clock []
   [:> Card {:style {:height "100%"}}
    [:> CardContent
-    [:> Typography {:align "center" :variant "h1"}
+    [:> Typography {:align "center" :variant "h1"
+                    :style {:white-space "nowrap"}}
      @(re-frame/subscribe [::subs/time])]
-    [:> Typography {:align "center" :variant "h4"}
+    [:> Typography {:align "center" :variant "h4"
+                    :style {:white-space "nowrap"}}
      @(re-frame/subscribe [::subs/day])]
     [:> Grid {:container true :spacing 0 :direction "row"
               :justify "center" :alignItems "center"}
