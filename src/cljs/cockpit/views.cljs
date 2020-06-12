@@ -7,9 +7,13 @@
    [cockpit.weather :as weather :refer [mm->in]]
    [cockpit.transit :as transit]
    [goog.string :as gstring]
-   ["@material-ui/core" :refer [Avatar Button Card CardActionArea CardActions
-                                CardContent CardHeader CardMedia Container Grid
-                                CssBaseline Paper Typography ThemeProvider]]
+   ["@material-ui/core/Avatar" :default Avatar]
+   ["@material-ui/core/Card" :default Card]
+   ["@material-ui/core/CardContent" :default CardContent]
+   ["@material-ui/core/Container" :default Container]
+   ["@material-ui/core/Grid" :default Grid]
+   ["@material-ui/core/CssBaseline" :default CssBaseline]
+   ["@material-ui/core/Typography" :default Typography]
    ["react-sparklines" :refer [Sparklines SparklinesLine
                                SparklinesReferenceLine dataProcessing]]
    ["@material-ui/core/colors/green" :default green]
