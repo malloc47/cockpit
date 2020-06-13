@@ -27,8 +27,12 @@
 (def color-scheme (js->clj green))
 (def accent-scheme (js->clj lightBlue))
 
+
+(def card-style {:height "100%"})
+(def card-actions-style {:padding "0px"})
+
 (defn clock []
-  [:> Card {:style {:height "100%"}}
+  [:> Card {:style card-style}
    [:> CardContent
     [:> Typography {:align "center" :variant "h1"
                     :style {:white-space "nowrap"}}
@@ -111,12 +115,12 @@
 
 (defn stocks
   []
-  [:> Card  {:style {:height "100%"}}
+  [:> Card  {:style card-style}
    [:> CardContent {:style {:padding-bottom "0px"}}
     (into
      [:<>]
      (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))
-    [:> CardActions {:style {:padding "0px"}}
+    [:> CardActions {:style card-actions-style}
      [:> IconButton {:on-click
                      (fn [_]
                        (doseq [sym config/stocks]
@@ -128,7 +132,7 @@
         @(re-frame/subscribe [::subs/stocks-update-time])]]]]]])
 
 (defn weather []
-  [:> Card  {:style {:height "100%"}}
+  [:> Card  {:style card-style}
    [:> CardContent {:style {:padding-bottom "0px"}}
     (let [weather @(re-frame/subscribe [::weather/weather])]
       [:<>
@@ -214,7 +218,7 @@
                  (list " " (some-> snow mm->in (round 1)) "\"")])]]])
          (->> weather :daily rest (take 6)))]
 
-       [:> CardActions {:style {:padding "0px"}}
+       [:> CardActions {:style card-actions-style}
         [:> IconButton {:on-click
                         (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
          [:> RefreshIcon]]
@@ -224,7 +228,7 @@
            @(re-frame/subscribe [::weather/weather-update-time])]]]]])]])
 
 (defn covid []
-  [:> Card  {:style {:height "100%"}}
+  [:> Card  {:style card-style}
    [:> CardContent {:style {:height "250px"}}
     (when-let [data @(re-frame/subscribe [::subs/covid-rows])]
       [:<>
@@ -269,7 +273,7 @@
    nil ""})
 
 (defn transit []
-  [:> Card  {:style {:height "100%"}}
+  [:> Card  {:style card-style}
    [:> CardContent {:style {:padding-bottom "0px"}}
     [:> Grid {:container true :spacing 1 :alignItems "center"}
      (map
@@ -316,7 +320,7 @@
 
       @(re-frame/subscribe [::transit/stop-times-processed]))]
 
-    [:> CardActions {:style {:padding "0px"}}
+    [:> CardActions {:style card-actions-style}
      [:> IconButton {:on-click
                      (fn [_]
                        (re-frame/dispatch-sync [::transit/clear])
