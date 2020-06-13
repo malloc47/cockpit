@@ -4,15 +4,19 @@
    [clojure.string :as str]
    [cockpit.config :as config]
    [cockpit.subs :as subs]
+   [cockpit.events :as events]
    [cockpit.weather :as weather :refer [mm->in]]
    [cockpit.transit :as transit]
    [goog.string :as gstring]
    ["@material-ui/core/Avatar" :default Avatar]
    ["@material-ui/core/Card" :default Card]
+   ["@material-ui/core/CardActions" :default CardActions]
    ["@material-ui/core/CardContent" :default CardContent]
    ["@material-ui/core/Container" :default Container]
    ["@material-ui/core/Grid" :default Grid]
    ["@material-ui/core/CssBaseline" :default CssBaseline]
+   ["@material-ui/core/IconButton" :default IconButton]
+   ["@material-ui/icons/Refresh" :default RefreshIcon]
    ["@material-ui/core/Typography" :default Typography]
    ["react-sparklines" :refer [Sparklines SparklinesLine
                                SparklinesReferenceLine dataProcessing]]
@@ -112,9 +116,16 @@
     (into
      [:<>]
      (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))
-    [:div {:style {:float "right"}}
-     [:> Typography {:variant "body2" :color "textSecondary"}
-      @(re-frame/subscribe [::subs/stocks-update-time])]]]])
+    [:> CardActions {:style {:padding "0px"}}
+     [:> IconButton {:on-click
+                     (fn [_]
+                       (doseq [sym config/stocks]
+                         (re-frame/dispatch [::events/fetch-stocks sym])))}
+      [:> RefreshIcon]]
+     [:div {:style {:width "100%"}}
+      [:div {:style {:float "right"}}
+       [:> Typography {:variant "body2" :color "textSecondary"}
+        @(re-frame/subscribe [::subs/stocks-update-time])]]]]]])
 
 (defn weather []
   [:> Card  {:style {:height "100%"}}
@@ -202,9 +213,15 @@
                 [:<>
                  (list " " (some-> snow mm->in (round 1)) "\"")])]]])
          (->> weather :daily rest (take 6)))]
-       [:div {:style {:float "right"}}
-        [:> Typography {:variant "body2" :color "textSecondary"}
-         @(re-frame/subscribe [::weather/weather-update-time])]]])]])
+
+       [:> CardActions {:style {:padding "0px"}}
+        [:> IconButton {:on-click
+                        (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
+         [:> RefreshIcon]]
+        [:div {:style {:width "100%"}}
+         [:div {:style {:float "right"}}
+          [:> Typography {:variant "body2" :color "textSecondary"}
+           @(re-frame/subscribe [::weather/weather-update-time])]]]]])]])
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
@@ -253,7 +270,7 @@
 
 (defn transit []
   [:> Card  {:style {:height "100%"}}
-   [:> CardContent
+   [:> CardContent {:style {:padding-bottom "0px"}}
     [:> Grid {:container true :spacing 1 :alignItems "center"}
      (map
       (fn [[{{:keys [color text-color short-name route-id]} :route
@@ -299,9 +316,18 @@
 
       @(re-frame/subscribe [::transit/stop-times-processed]))]
 
-    [:div {:style {:float "right"}}
-     [:> Typography {:variant "body2" :color "textSecondary"}
-      @(re-frame/subscribe [::transit/stop-times-update-interval])]]]])
+    [:> CardActions {:style {:padding "0px"}}
+     [:> IconButton {:on-click
+                     (fn [_]
+                       (re-frame/dispatch-sync [::transit/clear])
+                       (doseq [event (transit/generate-events
+                                      config/transit-stop-whitelist)]
+                         (re-frame/dispatch event)))}
+      [:> RefreshIcon]]
+     [:div {:style {:width "100%"}}
+      [:div {:style {:float "right"}}
+       [:> Typography {:variant "body2" :color "textSecondary"}
+        @(re-frame/subscribe [::transit/stop-times-update-interval])]]]]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]

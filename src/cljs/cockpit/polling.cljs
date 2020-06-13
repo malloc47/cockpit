@@ -22,37 +22,17 @@
             :event                    [::events/fetch-stocks sym]
             :dispatch-event-on-start? true})
          config/stocks)
-    (->> config/transit-stop-whitelist
-         (filter (comp not :fallback?))
-         (map (fn [stop]
-                {:interval 30
-                 :event [::transit/fetch-stop-times stop]
-                 :dispatch-event-on-start? true})))
-    (->> config/transit-stop-whitelist
-         (filter :fallback?)
-         ;; create a key without the direction for grouping
-         (map #(assoc % :stop (->> %
-                                   :stop-id
-                                   drop-last
-                                   (str/join ""))
-                      :stop-id (list (:stop-id %))))
-         ;; ignore the other keys
-         (group-by (juxt :agency-id :stop))
-         vals
-         (map (partial
-               reduce
-               (fn [a b]
-                 (let [c (merge a b)]
-                   (-> c
-                       ;; merge :id key into a list of ids
-                       (assoc :stop-id (concat (:stop-id a) (:stop-id b)))
-                       (dissoc :stop))))))
-         (map (fn [stop]
-                {:interval 30
-                 :event [::transit/fetch-stop-times-fallback stop]
-                 :dispatch-event-on-start? true})))
-    (->> config/transit-stop-whitelist
-         (map (fn [stop]
-                {:interval 604800 ; 1 week
-                 :event    [::transit/fetch-stop stop]
-                 :dispatch-event-on-start? true}))))))
+    (map (fn [event]
+           {:interval                 30
+            :event                    event
+            :dispatch-event-on-start? true})
+         (concat
+          (transit/generate-stop-time-events
+           config/transit-stop-whitelist)
+          (transit/generate-fallback-stop-time-events
+           config/transit-stop-whitelist)))
+    (map (fn [event]
+           {:interval                 604800 ; 1 week
+            :event                    event
+            :dispatch-event-on-start? true})
+         (transit/generate-stop-events config/transit-stop-whitelist)))))

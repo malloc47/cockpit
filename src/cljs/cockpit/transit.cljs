@@ -6,6 +6,7 @@
    [clojure.set :refer [difference]]
    [clojure.string :as str]
    [cockpit.config :as config]
+   [cockpit.db :as db]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
    [day8.re-frame.http-fx]
@@ -204,6 +205,57 @@
       :dispatch-n (map (fn [route-id]
                          [::fetch-route route-id])
                        route-ids)})))
+
+(re-frame/reg-event-db
+ ::clear
+ (fn [db _]
+   (-> db
+       (assoc :transit (:transit db/default-db))
+       (assoc :transit-fallback (:transit-fallback db/default-db)))))
+
+(defn generate-stop-time-events
+  [config]
+  (->> config
+       (filter (comp not :fallback?))
+       (map (fn [stop]
+              [::fetch-stop-times stop]))))
+
+(defn generate-fallback-stop-time-events
+  [config]
+  (->> config
+       (filter :fallback?)
+       ;; create a key without the direction for grouping
+       (map #(assoc % :stop (->> %
+                                 :stop-id
+                                 drop-last
+                                 (str/join ""))
+                    :stop-id (list (:stop-id %))))
+       ;; ignore the other keys
+       (group-by (juxt :agency-id :stop))
+       vals
+       (map (partial
+             reduce
+             (fn [a b]
+               (let [c (merge a b)]
+                 (-> c
+                     ;; merge :id key into a list of ids
+                     (assoc :stop-id (concat (:stop-id a) (:stop-id b)))
+                     (dissoc :stop))))))
+       (map (fn [stop]
+              [::fetch-stop-times-fallback stop]))))
+
+(defn generate-stop-events
+  [config]
+  (map (fn [stop]
+         [::fetch-stop stop])
+       config))
+
+(defn generate-events
+  [config]
+  (concat
+   (generate-stop-time-events config)
+   (generate-fallback-stop-time-events config)
+   (generate-stop-events config)))
 
 ;;; Subscriptions
 
