@@ -108,101 +108,103 @@
 (defn stocks
   []
   [:> Card  {:style {:height "100%"}}
-   [:> CardContent
+   [:> CardContent {:style {:padding-bottom "0px"}}
     (into
      [:<>]
      (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))
     [:div {:style {:float "right"}}
-      [:> Typography {:variant "body2" :color "textSecondary"}
-       @(re-frame/subscribe [::subs/stocks-update-time])]]]])
+     [:> Typography {:variant "body2" :color "textSecondary"}
+      @(re-frame/subscribe [::subs/stocks-update-time])]]]])
 
 (defn weather []
-  (let [weather @(re-frame/subscribe [::weather/weather])]
-    [:<>
-     [:> Grid {:container true :spacing 0 :direction "row"
-               :justify "center" :alignItems "center"}
-      [:> Grid {:item true :xs 3}
-       [:> Typography {:variant "h1"}
-        [:i {:class (str "wi wi-" (weather/request->icon weather))
-             :style {:color (get color-scheme "400")}}]]]
-      [:> Grid {:item true :xs 5 :style {:text-align "center"}}
-       [:> Typography {:align "center" :variant "h1"
-                       :display "inline"
-                       :style {:margin-top "0.1em"}}
-        (-> weather :current :temp int) "°"]]
-      [:> Grid {:item true :xs 2}
-       (let [{low :min high :max} (-> weather :daily first :temp)]
-         [:> Typography {:align "right" :display "inline"
-                         :variant "h4" :style {:float "right"}}
-          (int high) "°"
-          [:br]
-          (int low) "°"])]]
+  [:> Card  {:style {:height "100%"}}
+   [:> CardContent {:style {:padding-bottom "0px"}}
+    (let [weather @(re-frame/subscribe [::weather/weather])]
+      [:<>
+       [:> Grid {:container true :spacing 0 :direction "row"
+                 :justify "center" :alignItems "center"}
+        [:> Grid {:item true :xs 3}
+         [:> Typography {:variant "h1"}
+          [:i {:class (str "wi wi-" (weather/request->icon weather))
+               :style {:color (get color-scheme "400")}}]]]
+        [:> Grid {:item true :xs 5 :style {:text-align "center"}}
+         [:> Typography {:align "center" :variant "h1"
+                         :display "inline"
+                         :style {:margin-top "0.1em"}}
+          (-> weather :current :temp int) "°"]]
+        [:> Grid {:item true :xs 2}
+         (let [{low :min high :max} (-> weather :daily first :temp)]
+           [:> Typography {:align "right" :display "inline"
+                           :variant "h4" :style {:float "right"}}
+            (int high) "°"
+            [:br]
+            (int low) "°"])]]
 
-     (let [humidity    (-> weather :current :humidity)
-           feels-like  (some-> weather :current :feels_like int)
-           description (some-> weather :current :weather first
-                               :description str/capitalize)
-           rain        (some-> weather :daily first :rain mm->in (round 2))
-           snow        (some-> weather :daily first :snow mm->in (round 1))]
-       (->> [{:content description :render? description}
-             {:prefix "Feels like "
-              :content [:span {:style {:color (get accent-scheme "600")}}
-                        feels-like "°"]
-              :render? true}
-             {:content [:span {:style {:color (get accent-scheme "600")}}
-                        humidity [:i {:class "wi wi-humidity"}]]
-              :render? true}
-             {:postfix " rain"
-              :content [:span {:style {:color (get accent-scheme "600")}} rain "\""]
-              :render? rain}
-             {:postfix " snow"
-              :content [:span {:style {:color "red"}} snow "\""]
-              :render? snow}]
-            (map (fn [{:keys [prefix postfix content render?]}]
-                   (if render?
-                     (->> [prefix content postfix] (remove nil?) vec)
-                     [])))
-            (remove empty?)
-            (interpose [" | "])
-            (apply concat [:> Typography {:align "center" :color "textSecondary"}])
-            vec))
+       (let [humidity    (-> weather :current :humidity)
+             feels-like  (some-> weather :current :feels_like int)
+             description (some-> weather :current :weather first
+                                 :description str/capitalize)
+             rain        (some-> weather :daily first :rain mm->in (round 2))
+             snow        (some-> weather :daily first :snow mm->in (round 1))]
+         (->> [{:content description :render? description}
+               {:prefix "Feels like "
+                :content [:span {:style {:color (get accent-scheme "600")}}
+                          feels-like "°"]
+                :render? true}
+               {:content [:span {:style {:color (get accent-scheme "600")}}
+                          humidity [:i {:class "wi wi-humidity"}]]
+                :render? true}
+               {:postfix " rain"
+                :content [:span {:style {:color (get accent-scheme "600")}} rain "\""]
+                :render? rain}
+               {:postfix " snow"
+                :content [:span {:style {:color "red"}} snow "\""]
+                :render? snow}]
+              (map (fn [{:keys [prefix postfix content render?]}]
+                     (if render?
+                       (->> [prefix content postfix] (remove nil?) vec)
+                       [])))
+              (remove empty?)
+              (interpose [" | "])
+              (apply concat [:> Typography {:align "center" :color "textSecondary"}])
+              vec))
 
-     [:> Grid {:container true :spacing 1 :direction "row"
-               :justify "center" :alignItems "flex-start"
-               :style {:margin-top "1em"}}
-      (map
-       (fn [{date                 :dt
-             {low :min high :max} :temp
-             rain                 :rain
-             snow                 :snow
-             [{icon-id :id} & _]  :weather}]
-         ^{:key date}
-         [:> Grid {:item true :xs 2}
-          [:> Typography {:key date
-                          :variant "body1"
-                          :align "center"
-                          :style {:margin-bottom "0.5em"}}
-           (-> date weather/epoch->local-date .getWeekday weather/number->weekday)]
-          [:> Typography {:align "center" :variant "h5"}
-           [:i {:class (str "wi wi-" (weather/id->icon icon-id))
-                :style {:color (get accent-scheme "600")}}]]
-          [:> Typography {:align "center" :variant "subtitle2"}
-           (int high) "°"
-           (gstring/unescapeEntities "&#8194;")
-           [:span {:style {:color "rgb(132, 132, 132)"}} (int low) "°"]
-           [:span {:style {:color (get accent-scheme "600")}}
-            (when rain
-              [:<>
-               [:br]
-               (list " " (some-> rain mm->in (round 1)) "\"")])]
-           [:span {:style {:color "red"}}
-            (when snow
-              [:<>
-               (list " " (some-> snow mm->in (round 1)) "\"")])]]])
-       (->> weather :daily rest (take 6)))]
-     [:div {:style {:float "right"}}
-      [:> Typography {:variant "body2" :color "textSecondary"}
-       @(re-frame/subscribe [::weather/weather-update-time])]]]))
+       [:> Grid {:container true :spacing 1 :direction "row"
+                 :justify "center" :alignItems "flex-start"
+                 :style {:margin-top "1em"}}
+        (map
+         (fn [{date                 :dt
+               {low :min high :max} :temp
+               rain                 :rain
+               snow                 :snow
+               [{icon-id :id} & _]  :weather}]
+           ^{:key date}
+           [:> Grid {:item true :xs 2}
+            [:> Typography {:key date
+                            :variant "body1"
+                            :align "center"
+                            :style {:margin-bottom "0.5em"}}
+             (-> date weather/epoch->local-date .getWeekday weather/number->weekday)]
+            [:> Typography {:align "center" :variant "h5"}
+             [:i {:class (str "wi wi-" (weather/id->icon icon-id))
+                  :style {:color (get accent-scheme "600")}}]]
+            [:> Typography {:align "center" :variant "subtitle2"}
+             (int high) "°"
+             (gstring/unescapeEntities "&#8194;")
+             [:span {:style {:color "rgb(132, 132, 132)"}} (int low) "°"]
+             [:span {:style {:color (get accent-scheme "600")}}
+              (when rain
+                [:<>
+                 [:br]
+                 (list " " (some-> rain mm->in (round 1)) "\"")])]
+             [:span {:style {:color "red"}}
+              (when snow
+                [:<>
+                 (list " " (some-> snow mm->in (round 1)) "\"")])]]])
+         (->> weather :daily rest (take 6)))]
+       [:div {:style {:float "right"}}
+        [:> Typography {:variant "body2" :color "textSecondary"}
+         @(re-frame/subscribe [::weather/weather-update-time])]]])]])
 
 (defn covid []
   [:> Card  {:style {:height "100%"}}
@@ -308,9 +310,7 @@
       [:> Grid {:container true :spacing 1
                 :style {:padding-top "5px"}}
 
-       [:> Grid card-opts
-        [:> Card  {:style {:height "100%"}}
-         [:> CardContent [weather]]]]
+       [:> Grid card-opts [weather]]
 
        [:> Grid card-opts [clock]]
 
