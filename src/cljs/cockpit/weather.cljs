@@ -90,7 +90,8 @@
  :<- [::subs/clock]
  :<- [::weather]
  (fn [[clock {{:keys [dt]} :current}] _]
-   (subs/format-interval
-    (subs/safe-interval
-     (time-coerce/from-long (* 1000 dt))
-     (time-coerce/from-date clock)))))
+   (when dt
+     (subs/format-interval
+      (subs/safe-interval
+       (time-coerce/from-long (* 1000 dt))
+       (time-coerce/from-date clock))))))

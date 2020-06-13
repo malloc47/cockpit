@@ -278,14 +278,15 @@
  :<- [::subs/clock]
  :<- [::stop-times-update-times]
  (fn [[clock update-times] _]
-   (some->> update-times
-            vals
-            (map (fn [update-time]
-                   (subs/safe-interval
-                    (time-coerce/from-date update-time)
-                    (time-coerce/from-date clock))))
-            (apply max-key time/in-minutes)
-            subs/format-interval)))
+   (when update-times
+     (some->> update-times
+              vals
+              (map (fn [update-time]
+                     (subs/safe-interval
+                      (time-coerce/from-date update-time)
+                      (time-coerce/from-date clock))))
+              (apply max-key time/in-minutes)
+              subs/format-interval))))
 
 (re-frame/reg-sub
  ::stop-times-joined

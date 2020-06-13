@@ -18,7 +18,7 @@
 
 (defn format-interval
   [interval]
-  (let [base-seconds (time/in-seconds interval)
+  (let [base-seconds (or (some-> interval time/in-seconds) 0)
         seconds      (mod base-seconds 60)
         minutes      (-> base-seconds (/ 60) (mod 60) int)
         hours        (-> base-seconds (/ (* 60 60)) int)]
@@ -121,10 +121,11 @@
  :<- [::clock]
  :<- [::stocks]
  (fn [[clock {:keys [update-time]}] _]
-   (format-interval
-    (safe-interval
-     (time-coerce/from-date update-time)
-     (time-coerce/from-date clock)))))
+   (when update-time
+     (format-interval
+      (safe-interval
+       (time-coerce/from-date update-time)
+       (time-coerce/from-date clock))))))
 
 (re-frame/reg-sub
  ::covid
