@@ -28,12 +28,30 @@
 (def accent-scheme (js->clj lightBlue))
 
 
-(def card-style {:height "100%"})
-(def card-actions-style {:padding "0px"})
+(def card-style
+  ;; Customize to get more than 2 cards on a screen
+  {:height "48vh"})
+
+(def card-actions-style
+  {:padding-top "0px"
+   :padding-bottom "0px"})
+
+(def card-content-with-action-area
+  {:padding-bottom "0px"
+   :padding-top "2px"
+   :overflow "auto"
+   :height "calc(100% - 35px)"})
+
+(def card-content
+  {:padding-top "2px"
+   :overflow "auto"})
+
+(def icon-button
+  {:padding "5px"})
 
 (defn clock []
   [:> Card {:style card-style}
-   [:> CardContent
+   [:> CardContent {:style card-content}
     [:> Typography {:align "center" :variant "h1"
                     :style {:white-space "nowrap"}}
      @(re-frame/subscribe [::subs/time])]
@@ -116,24 +134,25 @@
 (defn stocks
   []
   [:> Card  {:style card-style}
-   [:> CardContent {:style {:padding-bottom "0px"}}
+   [:> CardContent {:style card-content-with-action-area}
     (into
      [:<>]
-     (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))
-    [:> CardActions {:style card-actions-style}
-     [:> IconButton {:on-click
-                     (fn [_]
-                       (doseq [sym config/stocks]
-                         (re-frame/dispatch [::events/fetch-stocks sym])))}
-      [:> RefreshIcon]]
-     [:div {:style {:width "100%"}}
-      [:div {:style {:float "right"}}
-       [:> Typography {:variant "body2" :color "textSecondary"}
-        @(re-frame/subscribe [::subs/stocks-update-time])]]]]]])
+     (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]
+   [:> CardActions {:style card-actions-style}
+    [:> IconButton {:style icon-button
+                    :on-click
+                    (fn [_]
+                      (doseq [sym config/stocks]
+                        (re-frame/dispatch [::events/fetch-stocks sym])))}
+     [:> RefreshIcon]]
+    [:div {:style {:width "100%"}}
+     [:div {:style {:float "right"}}
+      [:> Typography {:variant "body2" :color "textSecondary"}
+       @(re-frame/subscribe [::subs/stocks-update-time])]]]]])
 
 (defn weather []
   [:> Card  {:style card-style}
-   [:> CardContent {:style {:padding-bottom "0px"}}
+   [:> CardContent {:style card-content-with-action-area}
     (let [weather @(re-frame/subscribe [::weather/weather])]
       [:<>
        [:> Grid {:container true :spacing 0 :direction "row"
@@ -216,20 +235,20 @@
               (when snow
                 [:<>
                  (list " " (some-> snow mm->in (round 1)) "\"")])]]])
-         (->> weather :daily rest (take 6)))]
-
-       [:> CardActions {:style card-actions-style}
-        [:> IconButton {:on-click
-                        (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
-         [:> RefreshIcon]]
-        [:div {:style {:width "100%"}}
-         [:div {:style {:float "right"}}
-          [:> Typography {:variant "body2" :color "textSecondary"}
-           @(re-frame/subscribe [::weather/weather-update-time])]]]]])]])
+         (->> weather :daily rest (take 6)))]])]
+   [:> CardActions {:style card-actions-style}
+    [:> IconButton {:style icon-button
+                    :on-click
+                    (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
+     [:> RefreshIcon]]
+    [:div {:style {:width "100%"}}
+     [:div {:style {:float "right"}}
+      [:> Typography {:variant "body2" :color "textSecondary"}
+       @(re-frame/subscribe [::weather/weather-update-time])]]]]])
 
 (defn covid []
   [:> Card  {:style card-style}
-   [:> CardContent {:style {:height "250px"}}
+   [:> CardContent {:style (merge card-content {:height "250px"})}
     (when-let [data @(re-frame/subscribe [::subs/covid-rows])]
       [:<>
        [:> VegaLite {:actions false
@@ -274,7 +293,7 @@
 
 (defn transit []
   [:> Card  {:style card-style}
-   [:> CardContent {:style {:padding-bottom "0px"}}
+   [:> CardContent {:style card-content-with-action-area}
     [:> Grid {:container true :spacing 1 :alignItems "center"}
      (map
       (fn [[{{:keys [color text-color short-name route-id]} :route
@@ -318,20 +337,20 @@
 
          [:> Grid {:item true :xs 1}]])
 
-      @(re-frame/subscribe [::transit/stop-times-processed]))]
-
-    [:> CardActions {:style card-actions-style}
-     [:> IconButton {:on-click
-                     (fn [_]
-                       (re-frame/dispatch-sync [::transit/clear])
-                       (doseq [event (transit/generate-events
-                                      config/transit-stop-whitelist)]
-                         (re-frame/dispatch event)))}
-      [:> RefreshIcon]]
-     [:div {:style {:width "100%"}}
-      [:div {:style {:float "right"}}
-       [:> Typography {:variant "body2" :color "textSecondary"}
-        @(re-frame/subscribe [::transit/stop-times-update-interval])]]]]]])
+      @(re-frame/subscribe [::transit/stop-times-processed]))]]
+   [:> CardActions {:style card-actions-style}
+    [:> IconButton {:style icon-button
+                    :on-click
+                    (fn [_]
+                      (re-frame/dispatch-sync [::transit/clear])
+                      (doseq [event (transit/generate-events
+                                     config/transit-stop-whitelist)]
+                        (re-frame/dispatch event)))}
+     [:> RefreshIcon]]
+    [:div {:style {:width "100%"}}
+     [:div {:style {:float "right"}}
+      [:> Typography {:variant "body2" :color "textSecondary"}
+       @(re-frame/subscribe [::transit/stop-times-update-interval])]]]]])
 
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
