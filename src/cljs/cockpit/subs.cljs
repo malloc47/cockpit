@@ -3,34 +3,8 @@
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [cljs-time.format :as time-format]
-   [clojure.string :as str]
+   [cockpit.utils :refer [safe-interval format-interval]]
    [re-frame.core :as re-frame]))
-
-(defn safe-interval
-  "The local clock and the OTP instance clock are not guaranteed to be
-  in sync, and in practice the OTP instance provides times ahead of
-  local clock. Instead of blowing up, this swallows these errors."
-  [a b]
-  (try
-    (time/interval a b)
-    (catch js/Object e
-      (time/interval b b))))
-
-(defn format-interval
-  [interval]
-  (let [base-seconds (or (some-> interval time/in-seconds) 0)
-        seconds      (mod base-seconds 60)
-        minutes      (-> base-seconds (/ 60) (mod 60) int)
-        hours        (-> base-seconds (/ (* 60 60)) int)]
-    (or
-     (->> [hours minutes seconds]
-          (drop-while zero?)
-          reverse
-          (map #(str %2 %1) ["s" "m" "h"])
-          reverse
-          (str/join " ")
-          not-empty)
-     "0s")))
 
 (defn db->date-sub
   [format-map]

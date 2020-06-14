@@ -7,6 +7,7 @@
    [cockpit.config :as config]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
+   [cockpit.utils :refer [safe-interval format-interval]]
    [cockpit.utils :refer [round]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
@@ -140,7 +141,7 @@
  :<- [::weather]
  (fn [[clock {{:keys [dt]} :current}] _]
    (when dt
-     (subs/format-interval
-      (subs/safe-interval
+     (format-interval
+      (safe-interval
        (time-coerce/from-long (* 1000 dt))
        (time-coerce/from-date clock))))))

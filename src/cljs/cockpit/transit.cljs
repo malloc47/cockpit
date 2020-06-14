@@ -9,6 +9,7 @@
    [cockpit.db :as db]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
+   [cockpit.utils :refer [safe-interval format-interval]]
    [day8.re-frame.http-fx]
    [plumbing.core :refer [map-vals]]
    [re-frame.core :as re-frame]))
@@ -118,7 +119,7 @@
               direction-id   :directionId}]
           {:minutes        (-> time (+ day) (* 1e3)
                                time-coerce/from-long
-                               (->> (subs/safe-interval now))
+                               (->> (safe-interval now))
                                time/in-seconds
                                (/ 60)
                                js/Math.ceil)
@@ -334,11 +335,11 @@
      (some->> update-times
               vals
               (map (fn [update-time]
-                     (subs/safe-interval
+                     (safe-interval
                       (time-coerce/from-date update-time)
                       (time-coerce/from-date clock))))
               (apply max-key time/in-minutes)
-              subs/format-interval))))
+              format-interval))))
 
 (re-frame/reg-sub
  ::stop-times-joined
