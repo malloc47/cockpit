@@ -287,12 +287,14 @@
    (->> stops
         (map-vals
          (fn [{:keys [name] stop-id :id}]
-           {:name         name
-            :stop-id      stop-id
-            :direction-id (->> config/transit-stop-whitelist
-                               (filter (comp (partial = stop-id) :stop-id))
-                               first
-                               :direction-id)}))
+           (let [{:keys [direction-id sort-override]}
+                 (->> config/transit-stop-whitelist
+                      (filter (comp (partial = stop-id) :stop-id))
+                      first)]
+             {:name          name
+              :stop-id       stop-id
+              :direction-id  direction-id
+              :sort-override sort-override})))
         (into {}))))
 
 (re-frame/reg-sub
@@ -407,5 +409,6 @@
                             (nil? stop-direction-id))))
                         (sort-by :minutes)
                         (take 4)))
-        (sort-by (juxt (comp :sort-order :route first)
+        (sort-by (juxt (comp :sort-override :stop first)
+                       (comp :sort-order :route first)
                        (comp :stop-id :stop first))))))
