@@ -3,9 +3,11 @@
    [ajax.core :as ajax]
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
+   [clojure.string :as str]
    [cockpit.config :as config]
    [cockpit.events :as events]
    [cockpit.subs :as subs]
+   [cockpit.utils :refer [round]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
 
@@ -84,6 +86,53 @@
  (fn [{{:keys [sunrise sunset]} :current} _]
    {:sunrise (-> sunrise epoch->local-date .toUsTimeString)
     :sunset  (-> sunset epoch->local-date .toUsTimeString)}))
+
+(re-frame/reg-sub
+ ::conditions
+ :<- [::weather]
+ (fn [{{humidity                :humidity
+        feels-like              :feels_like
+        current-temp            :temp
+        [{:keys [description]}] :weather} :current
+       [{:keys                [rain snow]
+         {low :min high :max} :temp}]     :daily} _]
+   {:humidity    humidity
+    :feels-like  (-> feels-like int (str "°"))
+    :description (some-> description str/capitalize)
+    :rain        (some-> rain mm->in (round 2) (str "\""))
+    :snow        (some-> snow mm->in (round 2) (str "\""))
+    :temp        (some-> current-temp int (str "°"))
+    :low         (some-> low int (str "°"))
+    :high        (some-> high int (str "°"))}))
+
+(re-frame/reg-sub
+ ::forecast
+ :<- [::weather]
+ (fn [{forecast :daily} _]
+   (->> forecast
+        rest ; skip today
+        (map (fn [{date                 :dt
+                   {low :min high :max} :temp
+                   rain                 :rain
+                   snow                 :snow
+                   [{icon-id :id} & _]  :weather}]
+               {:epoch   date
+                :weekday (-> date
+                             epoch->local-date
+                             .getWeekday
+                             number->weekday)
+                :icon    (id->icon icon-id)
+                :high    (some-> high int (str "°"))
+                :low     (some-> low int (str "°"))
+                :rain    (some-> rain mm->in (round 1) (str "\""))
+                :snow    (some-> snow mm->in (round 1) (str "\""))}))
+        (take 6))))
+
+(re-frame/reg-sub
+ ::icon
+ :<- [::weather]
+ (fn [weather _]
+   (request->icon weather)))
 
 (re-frame/reg-sub
  ::weather-update-time
