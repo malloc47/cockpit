@@ -1,6 +1,7 @@
 (ns cockpit.polling
   (:require [cockpit.config :as config]
             [cockpit.events :as events]
+            [cockpit.stocks :as stocks]
             [cockpit.transit :as transit]
             [cockpit.weather :as weather]
             [clojure.string :as str]))
@@ -19,7 +20,7 @@
       :dispatch-event-on-start? true}]
     (map (fn [sym]
            {:interval                 900 ; 15 minutes
-            :event                    [::events/fetch-stocks sym]
+            :event                    [::stocks/fetch-stocks sym]
             :dispatch-event-on-start? true})
          config/stocks)
     (map (fn [event]

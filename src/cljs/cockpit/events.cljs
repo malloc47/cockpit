@@ -18,16 +18,6 @@
  (fn [db [_ new-time]]
    (assoc db :clock (js/Date.))))
 
-(re-frame/reg-event-db
- ::stocks
- (fn [db [_ result]]
-   (let [symbol (-> result
-                    (get "Meta Data")
-                    (get "2. Symbol"))]
-     (-> db
-         (assoc-in [:stocks (keyword symbol)] result)
-         (assoc-in [:stocks :update-time] (js/Date.))))))
-
 (defn explode-nested
   "Explode the values from nested seqs into multiple collections"
   [coll]
@@ -57,23 +47,6 @@
  ::http-fail
  (fn [db [_ key-path]]
    (assoc-in db key-path {})))
-
-(re-frame/reg-event-fx
- ::fetch-stocks
- (fn [_ [_ symbol]]
-   {:http-xhrio
-    {:method          :get
-     :uri             "https://www.alphavantage.co/query"
-     :params          {:function   "TIME_SERIES_INTRADAY"
-                       :symbol     symbol
-                       :interval   "5min"
-                       :outputsize "compact"
-                       :apikey     config/alpha-vantage-api-key}
-     :response-format (ajax/json-response-format {:keywords? false})
-     :on-success      [::stocks]
-     ;; TODO: this nukes the whole payload even if one of the queries
-     ;; is successful
-     :on-failure      [::http-fail [:stocks]]}}))
 
 (re-frame/reg-event-fx
  ::fetch-covid
