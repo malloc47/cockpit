@@ -1,10 +1,10 @@
 (ns cockpit.views
   (:require
+   [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.covid :as covid]
    [cockpit.events :as events]
    [cockpit.stocks :as stocks]
-   [cockpit.subs :as subs]
    [cockpit.transit :as transit]
    [cockpit.utils :refer [round]]
    [cockpit.weather :as weather]
@@ -56,23 +56,23 @@
    [:> CardContent {:style card-content}
     [:> Typography {:align "center" :variant "h4"
                     :style {:white-space "nowrap"}}
-     @(re-frame/subscribe [::subs/day])]
+     @(re-frame/subscribe [::clock/day])]
     [:> Typography {:align "center" :variant "h1"
                     :style {:white-space "nowrap"}}
-     @(re-frame/subscribe [::subs/time])]
+     @(re-frame/subscribe [::clock/time])]
     [:> Grid {:container true :spacing 0 :direction "row"
               :justify "center" :alignItems "center"}
      [:> Grid {:item true :xs 6}
       [:> Typography {:align "center" :variant "h6"
                       :style {:margin-top "0.5em"}}
-       @(re-frame/subscribe [::subs/time-pt])]
+       @(re-frame/subscribe [::clock/time-pt])]
       [:> Typography {:align "center" :variant "body2" :color "textSecondary"
                       :style {:margin-top "0.5em"}}
        "San Francisco"]]
      [:> Grid {:item true :xs 6}
       [:> Typography {:align "center" :variant "h6"
                       :style {:margin-top "0.5em"}}
-       @(re-frame/subscribe [::subs/time-ct])]
+       @(re-frame/subscribe [::clock/time-ct])]
       [:> Typography {:align "center" :variant "body2" :color "textSecondary"
                       :style {:margin-top "0.5em"}}
        "Chicago"]]]

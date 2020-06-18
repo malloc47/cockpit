@@ -5,10 +5,10 @@
    [cljs-time.core :as time]
    [clojure.set :refer [difference]]
    [clojure.string :as str]
+   [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.db :as db]
    [cockpit.events :as events]
-   [cockpit.subs :as subs]
    [cockpit.utils :refer [safe-interval format-interval]]
    [day8.re-frame.http-fx]
    [plumbing.core :refer [map-vals]]
@@ -322,7 +322,7 @@
 (re-frame/reg-sub
  ::stop-times
  :<- [::stop-times-raw]
- :<- [::subs/clock]
+ :<- [::clock/clock]
  (fn [[stop-times clock] _]
    (let [now (time-coerce/from-date clock)]
      (->> stop-times vals (apply concat)
@@ -330,7 +330,7 @@
 
 (re-frame/reg-sub
  ::stop-times-update-interval
- :<- [::subs/clock]
+ :<- [::clock/clock]
  :<- [::stop-times-update-times]
  (fn [[clock update-times] _]
    (when update-times

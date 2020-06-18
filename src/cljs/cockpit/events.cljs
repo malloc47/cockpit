@@ -13,11 +13,6 @@
  (fn-traced [_ _]
             db/default-db))
 
-(re-frame/reg-event-db
- ::timer
- (fn [db [_ new-time]]
-   (assoc db :clock (js/Date.))))
-
 (defn explode-nested
   "Explode the values from nested seqs into multiple collections"
   [coll]

@@ -4,11 +4,11 @@
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [clojure.string :as str]
+   [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.events :as events]
-   [cockpit.subs :as subs]
-   [cockpit.utils :refer [safe-interval format-interval]]
    [cockpit.utils :refer [round]]
+   [cockpit.utils :refer [safe-interval format-interval]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
 
@@ -137,7 +137,7 @@
 
 (re-frame/reg-sub
  ::weather-update-time
- :<- [::subs/clock]
+ :<- [::clock/clock]
  :<- [::weather]
  (fn [[clock {{:keys [dt]} :current}] _]
    (when dt
