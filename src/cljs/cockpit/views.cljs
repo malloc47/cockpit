@@ -4,6 +4,7 @@
    [cockpit.config :as config]
    [cockpit.subs :as subs]
    [cockpit.events :as events]
+   [cockpit.stocks :as stocks]
    [cockpit.weather :as weather]
    [cockpit.transit :as transit]
    [cockpit.utils :refer [round]]
@@ -99,7 +100,9 @@
     (- sparkline-height (* (/ (- ref bottom) (- top bottom)) sparkline-height))))
 
 (defn stock-chart [symbol]
-  (let [data         (clj->js (symbol @(re-frame/subscribe [::subs/stocks-sparkline])))
+  (let [data         (-> @(re-frame/subscribe [::stocks/stocks-sparkline])
+                         symbol
+                         clj->js)
         diff         (round (- (last data) (first data)))
         up?          (>= (last data) (first data))
         diff-display (str (if (>= diff 0) "+" "") diff)
@@ -137,12 +140,12 @@
                     :on-click
                     (fn [_]
                       (doseq [sym config/stocks]
-                        (re-frame/dispatch [::events/fetch-stocks sym])))}
+                        (re-frame/dispatch [::stocks/fetch-stocks sym])))}
      [:> RefreshIcon]]
     [:div {:style {:width "100%"}}
      [:div {:style {:float "right"}}
       [:> Typography {:variant "body2" :color "textSecondary"}
-       @(re-frame/subscribe [::subs/stocks-update-time])]]]]])
+       @(re-frame/subscribe [::stocks/stocks-update-time])]]]]])
 
 (defn weather-description []
   (let [{:keys [humidity feels-like description rain snow]}
