@@ -1,14 +1,15 @@
 (ns cockpit.views
   (:require
-   [re-frame.core :as re-frame]
    [cockpit.config :as config]
-   [cockpit.subs :as subs]
+   [cockpit.covid :as covid]
    [cockpit.events :as events]
    [cockpit.stocks :as stocks]
-   [cockpit.weather :as weather]
+   [cockpit.subs :as subs]
    [cockpit.transit :as transit]
    [cockpit.utils :refer [round]]
+   [cockpit.weather :as weather]
    [goog.string :as gstring]
+   [re-frame.core :as re-frame]
    ["@material-ui/core/Avatar" :default Avatar]
    ["@material-ui/core/Card" :default Card]
    ["@material-ui/core/CardActions" :default CardActions]
@@ -240,7 +241,7 @@
 (defn covid []
   [:> Card  {:style card-style}
    [:> CardContent {:style (merge card-content {:height "250px"})}
-    (when-let [data @(re-frame/subscribe [::subs/covid-rows])]
+    (when-let [data @(re-frame/subscribe [::covid/covid-rows])]
       [:<>
        [:> VegaLite {:actions false
                      :spec {:width    "container"

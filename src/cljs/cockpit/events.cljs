@@ -47,13 +47,3 @@
  ::http-fail
  (fn [db [_ key-path]]
    (assoc-in db key-path {})))
-
-(re-frame/reg-event-fx
- ::fetch-covid
- (fn [_ _]
-   {:http-xhrio
-    {:method :get
-     :uri    "https://data.cityofnewyork.us/resource/rc75-m7u3.json"
-     :response-format (ajax/json-response-format {:keywords? true})
-     :on-success      [::http-success :covid]
-     :on-failure      [::http-fail [:covid]]}}))

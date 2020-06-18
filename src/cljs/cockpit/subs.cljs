@@ -42,22 +42,3 @@
    (.toLocaleDateString
     clock
     [] #js {:weekday "long" :month "long" :day "numeric"})))
-
-(re-frame/reg-sub
- ::covid
- (fn [db _]
-   (:covid db)))
-
-(re-frame/reg-sub
- ::covid-rows
- :<- [::covid]
- (fn [covid _]
-   (->> covid
-        butlast
-        (mapcat
-         (fn [row]
-           (let [base-row {:date (:date_of_interest row)}]
-             [(merge base-row {:y (:case_count row) :type "cases"})
-              (merge base-row {:y (:hospitalized_count row) :type "hospitalized"})
-              (merge base-row {:y (:death_count row) :type "deaths"})])))
-        seq)))
