@@ -172,7 +172,7 @@
          (remove empty?)
          (interpose [" | "])
          (apply concat [:> Typography {:align "center" :color "textSecondary"
-                                       :variant "h6"}])
+                                       :variant "body1"}])
          vec)))
 
 (defn weather-conditions []
