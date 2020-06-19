@@ -11,12 +11,19 @@
    :lon -93.69
    :timezone "America/Chicago"
    :timezone_offset -18000
-   :current {:sunset 1592445763
-             :temp 79.32
-             :dt 1592446764
+   :current {:dt 1592446764
              :sunrise 1592389736
-             :humidity 54
+             :sunset 1592445763
+             :temp 79.32
              :feels_like 78.55
+             :pressure 1020
+             :humidity 54
+             :dew_point 61.57
+             :uvi 9.54
+             :clouds 1
+             :visibility 16093
+             :wind_speed 8.1
+             :wind_deg 335
              :weather [{:id 800 :main "Clear" :description "clear sky" :icon "01n"}]}
    :daily
    [{:sunset 1592445763
@@ -25,6 +32,12 @@
      :sunrise 1592389736
      :humidity 54
      :feels_like {:day 74.59 :night 68.94 :eve 74.59 :morn 74.59}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 800 :main "Clear" :description "clear sky" :icon "01d"}]}
     {:sunset 1592532181
      :temp {:day 75.9 :min 60.82 :max 79.77 :night 60.82 :eve 72.34 :morn 67.91}
@@ -32,6 +45,12 @@
      :sunrise 1592476142
      :humidity 77
      :feels_like {:day 75.63 :night 59.07 :eve 73.11 :morn 65.44}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 502 :main "Rain" :description "heavy intensity rain" :icon "10d"}]
      :rain 18.44}
     {:sunset 1592618598
@@ -40,6 +59,12 @@
      :sunrise 1592562550
      :humidity 59
      :feels_like {:day 72.28 :night 62.76 :eve 73.42 :morn 58.3}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 804 :main "Clouds" :description "overcast clouds" :icon "04d"}]}
     {:sunset 1592705012
      :temp {:day 75.58 :min 62.24 :max 77.92 :night 64.71 :eve 74.25 :morn 62.24}
@@ -47,6 +72,12 @@
      :sunrise 1592648960
      :humidity 57
      :feels_like {:day 75.9 :night 67.95 :eve 77.41 :morn 61.25}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 500 :main "Rain" :description "light rain" :icon "10d"}]
      :rain 2.97}
     {:sunset 1592791424
@@ -55,6 +86,12 @@
      :sunrise 1592735372
      :humidity 64
      :feels_like {:day 76.91 :night 65.07 :eve 79.77 :morn 64.83}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 501 :main "Rain" :description "moderate rain" :icon "10d"}]
      :rain 7.02}
     {:sunset 1592877834
@@ -63,6 +100,12 @@
      :sunrise 1592821787
      :humidity 75
      :feels_like {:day 69.67 :night 52.07 :eve 66.88 :morn 64.96}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 500 :main "Rain" :description "light rain" :icon "10d"}]
      :rain 1.4}
     {:sunset 1592964242
@@ -71,6 +114,12 @@
      :sunrise 1592908203
      :humidity 62
      :feels_like {:day 61.99 :night 50.31 :eve 60.91 :morn 52.54}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 501 :main "Rain" :description "moderate rain" :icon "10d"}]
      :rain 3.23}
     {:sunset 1593050647
@@ -79,6 +128,12 @@
      :sunrise 1592994622
      :humidity 84
      :feels_like {:day 52.21 :night 49.57 :eve 55.42 :morn 44.6}
+     :pressure 1020
+     :dew_point 61.57
+     :uvi 9.54
+     :clouds 1
+     :wind_speed 8.1
+     :wind_deg 335
      :weather [{:id 500 :main "Rain" :description "light rain" :icon "10d"}]
      :rain 1.39}]})
 
