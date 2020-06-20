@@ -1,11 +1,10 @@
 (ns cockpit.transit-test
   (:require
-   [ajax.core :as ajax]
    [cljs.test :refer-macros [deftest testing is]]
-   [cockpit.events :as events]
+   [clojure.string :as str]
+   [cockpit.config :as config]
    [cockpit.transit :as transit]
    [cockpit.transit-test-data :as data]
-   [clojure.string :as str]
    [day8.re-frame.test :as rf-test]
    [re-frame.core :as re-frame]))
 
@@ -24,7 +23,11 @@
               data/stop-payload
 
               (str/includes? uri "/routes/")
-              data/route-payload))))))
+              data/route-payload
+
+              ;; Fallback URI
+              (str/includes? uri "/getTime/")
+              data/fallback-payload))))))
 
 (defn clock-time-relative-to-first-stop-time
   [offset]
@@ -40,62 +43,125 @@
          (+ offset)))))
 
 (deftest transit-gtfs
-  (rf-test/run-test-sync
-   (stub-http-fetch)
+  (with-redefs [config/transit-stop-whitelist
+                 [{:agency-id    "MTASBWY"
+                   :stop-id      "MTASBWY:142N"
+                   :direction-id "0"}]]
+    (rf-test/run-test-sync
+     (stub-http-fetch)
 
-   (reset! re-frame.db/app-db
-           {:clock
-            (clock-time-relative-to-first-stop-time -60000)})
+     (reset! re-frame.db/app-db
+             {:clock
+              (clock-time-relative-to-first-stop-time -60000)})
 
-   (re-frame/dispatch [::transit/fetch-stop {:stop-id "MTASBWY:142N"}])
-   ;; Should also fetch routes
-   (re-frame/dispatch [::transit/fetch-stop-times
-                       {:agency-id    "MTASBWY"
-                        :stop-id      "MTASBWY:142N"
-                        :direction-id "0"}])
+     (re-frame/dispatch [::transit/fetch-stop {:stop-id "MTASBWY:142N"}])
+     ;; Should also fetch routes
+     (re-frame/dispatch [::transit/fetch-stop-times
+                         {:agency-id    "MTASBWY"
+                          :stop-id      "MTASBWY:142N"
+                          :direction-id "0"}])
 
-   (testing "Raw data is populated"
-     (is (= #{"MTASBWY:142N"}
-            (->> @(re-frame/subscribe [::transit/stops])
-                 vals
-                 (map :stop-id)
-                 set))
-         "Stops were fetched")
+     (testing "Raw data is populated"
+       (is (= #{"MTASBWY:142N"}
+              (->> @(re-frame/subscribe [::transit/stops])
+                   vals
+                   (map :stop-id)
+                   set))
+           "Stops were fetched")
 
-     (is (= #{"MTASBWY:1"}
-            (->> @(re-frame/subscribe [::transit/routes])
-                 vals
-                 (map :route-id)
-                 set))
-         "Routes were fetched when processing stop times")
+       (is (= #{"MTASBWY:1"}
+              (->> @(re-frame/subscribe [::transit/routes])
+                   vals
+                   (map :route-id)
+                   set))
+           "Routes were fetched when processing stop times")
 
-     (is (= 6 (count @(re-frame/subscribe [::transit/stop-times])))
-         "Returns all the stop times for the stop"))
+       (is (= 6 (count @(re-frame/subscribe [::transit/stop-times])))
+           "Returns all the stop times for the stop"))
 
-   (testing "Stop times processing"
-     (let [stop-times
-           (->> @(re-frame/subscribe [::transit/stop-times-processed])
-                first
-                second)]
-       (is (->> stop-times
-                (map :minutes)
-                (apply max)
-                (>= 60 ))
-           "View returns stop times in the next hour")
+     (testing "Stop times processing"
+       (let [stop-times
+             (->> @(re-frame/subscribe [::transit/stop-times-processed])
+                  first
+                  second)]
+         (is (->> stop-times
+                  (map :minutes)
+                  (apply max)
+                  (>= 60 ))
+             "View returns stop times in the next hour")
 
-       (is (every? (fn [{:keys [stop route]}]
-                     (and (some? stop) (some? route)))
-                   stop-times)
-           "Stop times are enriched with joined route and stop")))
+         (js/console.log (->> @(re-frame/subscribe [::transit/stop-times-processed])
+                              first
+                              second
+                              (map :minutes)))
 
-   (testing "Interval calculation"
-     (swap! re-frame.db/app-db
-            #(assoc % :clock
-                    ;; Roll time back an hour
-                    (clock-time-relative-to-first-stop-time (* -60 60 1000))))
-     (is (->> @(re-frame/subscribe [::transit/stop-times-processed])
+         (is (every? (fn [{:keys [stop route]}]
+                       (and (some? stop) (some? route)))
+                     stop-times)
+             "Stop times are enriched with joined route and stop")))
+
+     (testing "Interval calculation"
+       (swap! re-frame.db/app-db
+              #(assoc % :clock
+                      ;; Roll time back an hour
+                      (clock-time-relative-to-first-stop-time (* -60 60 1000))))
+       (is (->> @(re-frame/subscribe [::transit/stop-times-processed])
                 first
                 second
                 count
                 zero?)
-         "No stop times are returned if they are all greater than an hour"))))
+           "No stop times are returned if they are all greater than an hour")))))
+
+(deftest transit-fallback
+  (with-redefs [config/transit-stop-whitelist
+                 [{:agency-id    "MTASBWY"
+                   :stop-id      "MTASBWY:142N"
+                   :direction-id "0"
+                   :fallback?    true}]]
+    (rf-test/run-test-sync
+     (stub-http-fetch)
+
+     (reset! re-frame.db/app-db
+             {:clock
+              ;; This doesn't matter for the fallback
+              (clock-time-relative-to-first-stop-time -60000)})
+
+     (re-frame/dispatch [::transit/fetch-stop {:stop-id "MTASBWY:142N"}])
+     ;; Should also fetch routes
+     (re-frame/dispatch [::transit/fetch-stop-times-fallback
+                         {:agency-id    "MTASBWY"
+                          :stop-id      ["MTASBWY:142N"]
+                          :direction-id "0"}])
+
+     (testing "Raw data is populated"
+       (is (= #{"MTASBWY:142N"}
+              (->> @(re-frame/subscribe [::transit/stops])
+                   vals
+                   (map :stop-id)
+                   set))
+           "Stops were fetched")
+
+       (is (= #{"MTASBWY:1"}
+              (->> @(re-frame/subscribe [::transit/routes])
+                   vals
+                   (map :route-id)
+                   set))
+           "Routes were fetched when processing stop times")
+
+       (is (= 8 (count @(re-frame/subscribe [::transit/stop-times-fallback])))
+           "Returns all the stop times for the stop"))
+
+     (js/console.log @(re-frame/subscribe [::transit/stop-times-joined]))
+
+     (testing "Stop times processing"
+       (let [stop-times
+             (->> @(re-frame/subscribe [::transit/stop-times-processed])
+                  first
+                  second)]
+         (is (= 4 (count stop-times))
+             "View returns only stop times in the configured direction")
+
+         (is (every? (fn [{:keys [stop route]}]
+                       (and (some? stop) (some? route)))
+                     stop-times)
+             "Stop times are enriched with joined route and stop"))))))

@@ -194,3 +194,34 @@
       :arrivalFmt "2020-06-20T00:19:00-04:00"
       :stopHeadsign "Uptown & The Bronx"
       :tripHeadsign "Van Cortlandt Park - 242 St"}]}])
+
+(def fallback-payload
+  {:lastUpdatedTime "4:05:15 pm",
+  :lastUpdatedOn "1592683515",
+  :stationName "South Ferry",
+  :direction1
+  {:name "Uptown",
+   :times
+   [{:route "1",
+     :lastStation "Van Cortlandt Park - 242 St",
+     :minutes 1}
+    {:route "1",
+     :lastStation "Van Cortlandt Park - 242 St",
+     :minutes 31}
+    {:route "1",
+     :lastStation "Van Cortlandt Park - 242 St",
+     :minutes 41}
+    {:route "1",
+     :lastStation "Van Cortlandt Park - 242 St",
+     :minutes 51}]},
+  :direction2
+  {:name "Downtown",
+   :times
+   [{:route "1", :lastStation "South Ferry", :minutes 3}
+    {:route "1", :lastStation "South Ferry", :minutes 11}
+    {:route "1", :lastStation "South Ferry", :minutes 19}
+    {:route "1", :lastStation "South Ferry", :minutes 28}]},
+  :message
+  {:message "XML Doc created successfully",
+   :messageType "SUCCESS",
+   :errorCode "0"}})
