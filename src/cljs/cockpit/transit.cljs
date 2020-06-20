@@ -394,11 +394,13 @@
                    (assoc :route (get routes route-id)))))
         ;; Make this an inner join
         (filter (every-pred :stop :route))
-        ;; Handle the grouping by colored routes or something similar
+        ;; Group by stop only
         (group-by #(select-keys % [:stop]))
+        ;; Add route to key after grouping to keep routes together
         (map (fn [[k v]]
                [(assoc k :route (roll-up-route v))
                 v]))
+        (into {})
         ;; more view logic here
         (map-vals #(->> %
                         (filter
