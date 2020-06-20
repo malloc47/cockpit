@@ -28,11 +28,16 @@
 
 (defn clock-time-relative-to-first-stop-time
   [offset]
-  (js/Date.
-   ;; The earliest stop time
-   (-> (+ 1592539200 84540)
-       (* 1e3)
-       (+ offset))))
+  (let [earliest-time
+        (->> data/stop-times-payload
+             (mapcat (fn [{stop-times :times}]
+                       (map (fn [{:keys [serviceDay realtimeDeparture]}]
+                              (+ serviceDay realtimeDeparture)) stop-times)))
+             (apply min))]
+    (js/Date.
+     (-> earliest-time
+         (* 1e3)
+         (+ offset)))))
 
 (deftest transit-gtfs
   (rf-test/run-test-sync
