@@ -202,8 +202,7 @@
       [:> Grid {:item true :xs 2}
        [:> Typography {:key epoch
                        :variant "body1"
-                       :align "center"
-                       :style {:margin-bottom "0.5em"}}
+                       :align "center"}
         weekday]
        [:> Typography {:align "center" :variant "h5"}
         [:i {:class (str "wi wi-" icon)

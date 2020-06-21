@@ -8,6 +8,13 @@
   (let [base (->> (repeat 10) (take (or decimals 2)) (reduce *))]
     (/ (.round js/Math (* base num)) base)))
 
+(defn round-nonzero
+  [num & [decimals]]
+  (let [rounded (round num (or decimals 2))]
+    (if (zero? rounded)
+      (str "<" (/ (or decimals 2) 10))
+      (str rounded))))
+
 (defn safe-interval
   "The local clock and the OTP instance clock are not guaranteed to be
   in sync, and in practice the OTP instance provides times ahead of

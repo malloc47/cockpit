@@ -7,7 +7,7 @@
    [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.events :as events]
-   [cockpit.utils :refer [round]]
+   [cockpit.utils :refer [round-nonzero]]
    [cockpit.utils :refer [safe-interval format-interval]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
@@ -100,8 +100,8 @@
    {:humidity    humidity
     :feels-like  (-> feels-like int (str "°"))
     :description (some-> description str/capitalize)
-    :rain        (some-> rain mm->in (round 2) (str "\""))
-    :snow        (some-> snow mm->in (round 2) (str "\""))
+    :rain        (some-> rain mm->in (round-nonzero 2) (str "\""))
+    :snow        (some-> snow mm->in (round-nonzero 2) (str "\""))
     :temp        (some-> current-temp int (str "°"))
     :low         (some-> low int (str "°"))
     :high        (some-> high int (str "°"))}))
@@ -111,7 +111,7 @@
  :<- [::weather]
  (fn [{forecast :daily} _]
    (->> forecast
-        rest ; skip today
+        rest                            ; skip today
         (map (fn [{date                 :dt
                    {low :min high :max} :temp
                    rain                 :rain
@@ -125,8 +125,8 @@
                 :icon    (id->icon icon-id)
                 :high    (some-> high int (str "°"))
                 :low     (some-> low int (str "°"))
-                :rain    (some-> rain mm->in (round 1) (str "\""))
-                :snow    (some-> snow mm->in (round 1) (str "\""))}))
+                :rain    (some-> rain mm->in (round-nonzero 1) (str "\""))
+                :snow    (some-> snow mm->in (round-nonzero 1) (str "\""))}))
         (take 6))))
 
 (re-frame/reg-sub
