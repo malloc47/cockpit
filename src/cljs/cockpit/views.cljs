@@ -20,66 +20,80 @@
    ["@material-ui/core/IconButton" :default IconButton]
    ["@material-ui/icons/Refresh" :default RefreshIcon]
    ["@material-ui/core/Typography" :default Typography]
-   ["react-sparklines" :refer [Sparklines SparklinesLine
-                               SparklinesReferenceLine dataProcessing]]
+   ["@material-ui/core/styles" :refer [styled]]
    ["@material-ui/core/colors/green" :default green]
    ["@material-ui/core/colors/lightBlue" :default lightBlue]
+   ["react-sparklines" :refer [Sparklines SparklinesLine
+                               SparklinesReferenceLine]]
    ["react-vega" :refer [VegaLite]]))
 
+(defn style
+  [component css]
+  ((styled component) (clj->js css)))
 
 (def color-scheme (js->clj green))
 (def accent-scheme (js->clj lightBlue))
 
-(def card-style
+(def ^:const FixedHeightCard
   ;; Customize to get more than 2 cards on a screen
-  {:height "48vh"})
+  (style Card {:height "48vh"}))
 
-(def card-actions-style
-  {:padding-top "0px"
-   :padding-bottom "0px"})
+(def ^:const CardContentWithFooter
+  (style CardContent
+         {:padding-bottom "0px"
+          :padding-top "2px"
+          :overflow "auto"
+          :height "calc(100% - 35px)"}))
 
-(def card-content-with-action-area
-  {:padding-bottom "0px"
-   :padding-top "2px"
-   :overflow "auto"
-   :height "calc(100% - 35px)"})
+(def ^:const CardContentThin
+  (style CardContent
+         {:padding-top "2px"
+          :overflow "auto"}))
 
-(def card-content
-  {:padding-top "2px"
-   :overflow "auto"})
+(def ^:const CardActionsThin
+  (style CardActions
+         {:padding-bottom "0px"
+          :padding-top "0px"}))
 
-(def icon-button
-  {:padding "5px"})
+(def ^:const IconButtonSmall
+  (style IconButton {:padding "5px"}))
+
+(def ^:const TypographyNoWrap
+  (style Typography {:white-space "nowrap"}))
+
+(def ^:const TypographyFloatRight
+  (style Typography {:float "right"}))
+
+(def ^:const TypographyH5Point5
+  (style Typography {:font-size "1.9rem"}))
+
+(def ^:const GridCenter
+  ;; Customize to get more than 2 cards on a screen
+  (style Grid {:text-align "center"}))
+
 
 (defn clock []
-  [:> Card {:style card-style}
-   [:> CardContent {:style card-content}
-    [:> Typography {:align "center" :variant "h4"
-                    :style {:white-space "nowrap"}}
+  [:> FixedHeightCard
+   [:> CardContentThin
+    [:> TypographyNoWrap {:align "center" :variant "h4"}
      @(re-frame/subscribe [::clock/day])]
-    [:> Typography {:align "center" :variant "h1"
-                    :style {:white-space "nowrap"}}
+    [:> TypographyNoWrap {:align "center" :variant "h1"}
      @(re-frame/subscribe [::clock/time])]
     [:> Grid {:container true :spacing 0 :direction "row"
               :justify "center" :alignItems "center"}
      [:> Grid {:item true :xs 6}
-      [:> Typography {:align "center" :variant "h6"
-                      :style {:margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "h6"}
        @(re-frame/subscribe [::clock/time-pt])]
-      [:> Typography {:align "center" :variant "body2" :color "textSecondary"
-                      :style {:margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "body2" :color "textSecondary"}
        "San Francisco"]]
      [:> Grid {:item true :xs 6}
-      [:> Typography {:align "center" :variant "h6"
-                      :style {:margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "h6"}
        @(re-frame/subscribe [::clock/time-ct])]
-      [:> Typography {:align "center" :variant "body2" :color "textSecondary"
-                      :style {:margin-top "0.5em"}}
+      [:> Typography {:align "center" :variant "body2" :color "textSecondary"}
        "Chicago"]]]
     (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::weather/sun])]
       [:> Typography {:align "center"
-                      :variant "h6"
-                      :style {:margin-top "0.5em"}}
+                      :variant "h6"}
        [:i {:class (str "wi wi-sunrise") :style {:color (get accent-scheme "600")}}]
        sunrise
        (gstring/unescapeEntities "&#8194;")
@@ -131,17 +145,17 @@
                 :strokeDasharray "1, 3" }}]]]))
 
 (defn stocks []
-  [:> Card  {:style card-style}
-   [:> CardContent {:style card-content-with-action-area}
+  [:> FixedHeightCard
+   [:> CardContentWithFooter
     (into
      [:<>]
      (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]
-   [:> CardActions {:style card-actions-style}
-    [:> IconButton {:style icon-button
-                    :on-click
-                    (fn [_]
-                      (doseq [sym config/stocks]
-                        (re-frame/dispatch [::stocks/fetch-stocks sym])))}
+   [:> CardActionsThin
+    [:> IconButtonSmall
+     {:on-click
+      (fn [_]
+        (doseq [sym config/stocks]
+          (re-frame/dispatch [::stocks/fetch-stocks sym])))}
      [:> RefreshIcon]]
     [:div {:style {:width "100%"}}
      [:div {:style {:float "right"}}
@@ -182,15 +196,13 @@
     [:> Typography {:variant "h1"}
      [:i {:class (str "wi wi-" @(re-frame/subscribe [::weather/icon]))
           :style {:color (get color-scheme "400")}}]]]
-   [:> Grid {:item true :xs 5 :style {:text-align "center"}}
+   [:> GridCenter {:item true :xs 5}
     [:> Typography {:align "center" :variant "h1"
-                    :display "inline"
-                    :style {:margin-top "0.1em"}}
+                    :display "inline"}
      (:temp @(re-frame/subscribe [::weather/conditions]))]]
    [:> Grid {:item true :xs 2}
     (let [{:keys [low high]} @(re-frame/subscribe [::weather/conditions])]
-      [:> Typography {:align "right" :display "inline"
-                      :variant "h4" :style {:float "right"}}
+      [:> TypographyFloatRight {:align "right" :display "inline" :variant "h4"}
        high [:br] low])]])
 
 (defn weather-forecast []
@@ -221,16 +233,16 @@
     @(re-frame/subscribe [::weather/forecast]))])
 
 (defn weather []
-  [:> Card  {:style card-style}
-   [:> CardContent {:style card-content-with-action-area}
+  [:> FixedHeightCard
+   [:> CardContentWithFooter
     [weather-description]
     [weather-conditions]
     [weather-forecast]]
 
-   [:> CardActions {:style card-actions-style}
-    [:> IconButton {:style icon-button
-                    :on-click
-                    (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
+   [:> CardActionsThin
+    [:> IconButtonSmall
+     {:on-click
+      (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
      [:> RefreshIcon]]
     [:div {:style {:width "100%"}}
      [:div {:style {:float "right"}}
@@ -238,8 +250,8 @@
        @(re-frame/subscribe [::weather/weather-update-time])]]]]])
 
 (defn covid []
-  [:> Card  {:style card-style}
-   [:> CardContent {:style (merge card-content {:height "250px"})}
+  [:> FixedHeightCard
+   [:> CardContentThin
     (when-let [data @(re-frame/subscribe [::covid/covid-rows])]
       [:<>
        [:> VegaLite {:actions false
@@ -283,8 +295,8 @@
    nil ""})
 
 (defn transit []
-  [:> Card  {:style card-style}
-   [:> CardContent {:style card-content-with-action-area}
+  [:> FixedHeightCard
+   [:> CardContentWithFooter
     [:> Grid {:container true :spacing 1 :alignItems "center"}
      (map
       (fn [[{{:keys [color text-color short-name route-id]} :route
@@ -315,8 +327,8 @@
                  [:<> {:key idx}
                   [:> Grid {:item true :xs 2}
                    (when stop-time
-                     [:> Typography
-                      {:variant "h5" :style {:font-size "1.9rem"}}
+                     [:> TypographyH5Point5
+                      {:variant "h5"}
                       [:span {:style {:color (if (> minutes 0) "black" "green")}}
                        (if (> minutes 0)
                          [:<> minutes
@@ -329,14 +341,14 @@
          [:> Grid {:item true :xs 1}]])
       @(re-frame/subscribe [::transit/stop-times-processed]))]]
 
-   [:> CardActions {:style card-actions-style}
-    [:> IconButton {:style icon-button
-                    :on-click
-                    (fn [_]
-                      (re-frame/dispatch-sync [::transit/clear])
-                      (doseq [event (transit/generate-events
-                                     config/transit-stop-whitelist)]
-                        (re-frame/dispatch event)))}
+   [:> CardActionsThin
+    [:> IconButtonSmall
+     {:on-click
+      (fn [_]
+        (re-frame/dispatch-sync [::transit/clear])
+        (doseq [event (transit/generate-events
+                       config/transit-stop-whitelist)]
+          (re-frame/dispatch event)))}
      [:> RefreshIcon]]
     [:div {:style {:width "100%"}}
      [:div {:style {:float "right"}}
@@ -346,9 +358,9 @@
 (defn main-panel []
   (let [card-opts {:item true :xs 12 :sm 12 :md 6  :lg 4}]
     [:> CssBaseline
-     [:> Container {:maxWidth false}
-      [:> Grid {:container true :spacing 1
-                :style {:padding-top "5px"}}
+     [:> Container {:maxWidth false
+                    :style {:padding-top "5px"}}
+      [:> Grid {:container true :spacing 1}
 
        [:> Grid card-opts [weather]]
 
