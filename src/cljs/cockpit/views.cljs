@@ -10,6 +10,9 @@
    [cockpit.weather :as weather]
    [goog.string :as gstring]
    [re-frame.core :as re-frame]
+   [reagent.core :refer [as-element]]
+   ["jss" :default jss]
+   ["jss-plugin-nested" :default jssNested]
    ["@material-ui/core/Avatar" :default Avatar]
    ["@material-ui/core/Card" :default Card]
    ["@material-ui/core/CardActions" :default CardActions]
@@ -27,12 +30,33 @@
                                SparklinesReferenceLine]]
    ["react-vega" :refer [VegaLite]]))
 
-(defn style
-  [component css]
-  ((styled component) (clj->js css)))
+(.use jss (jssNested))
 
 (def color-scheme (js->clj green))
 (def accent-scheme (js->clj lightBlue))
+
+(def styles
+  {:text-secondary  {:color "rgb(132, 132, 132)"}
+   :reference-line  {:stroke          "black"
+                     :strokeOpacity   0.75
+                     :strokeDasharray "1, 3" }
+   :highlight-color {:color (get color-scheme "400")}
+   :accent-color    {:color (get accent-scheme "600")}
+   :alert-color     {:color "red"}
+   :right-aligned   {:width             "100%"
+                     "& > :first-child" {:float "right"}}})
+
+(def classes
+  (-> styles
+      clj->js
+      (->> (.createStyleSheet jss))
+      .attach
+      (aget "classes")
+      (js->clj :keywordize-keys true)))
+
+(defn style
+  [component css]
+  ((styled component) (clj->js css)))
 
 (def ^:const FixedHeightCard
   ;; Customize to get more than 2 cards on a screen
@@ -71,7 +95,6 @@
   ;; Customize to get more than 2 cards on a screen
   (style Grid {:text-align "center"}))
 
-
 (defn clock []
   [:> FixedHeightCard
    [:> CardContentThin
@@ -94,10 +117,10 @@
     (let [{:keys [sunrise sunset]} @(re-frame/subscribe [::weather/sun])]
       [:> Typography {:align "center"
                       :variant "h6"}
-       [:i {:class (str "wi wi-sunrise") :style {:color (get accent-scheme "600")}}]
+       [:i {:class (str "wi wi-sunrise " (:accent-color classes))}]
        sunrise
        (gstring/unescapeEntities "&#8194;")
-       [:i {:class (str "wi wi-sunset") :style {:color (get accent-scheme "600")}}]
+       [:i {:class (str "wi wi-sunset " (:accent-color classes))}]
        sunset])]])
 
 (def sparkline-height 30)
@@ -140,9 +163,7 @@
       [:> SparklinesLine {:color color}]
       [:> SparklinesReferenceLine
        {:type "custom" :value (correct-reference-line data)
-        :style {:stroke "black"
-                :strokeOpacity 0.75
-                :strokeDasharray "1, 3" }}]]]))
+        :style (:reference-line styles)}]]]))
 
 (defn stocks []
   [:> FixedHeightCard
@@ -157,8 +178,8 @@
         (doseq [sym config/stocks]
           (re-frame/dispatch [::stocks/fetch-stocks sym])))}
      [:> RefreshIcon]]
-    [:div {:style {:width "100%"}}
-     [:div {:style {:float "right"}}
+    [:div {:class (:right-aligned classes)}
+     [:div
       [:> Typography {:variant "body2" :color "textSecondary"}
        @(re-frame/subscribe [::stocks/stocks-update-time])]]]]])
 
@@ -167,17 +188,17 @@
         @(re-frame/subscribe [::weather/conditions])]
     (->> [{:content description :render? description}
           {:prefix "Feels like "
-           :content [:span {:style {:color (get accent-scheme "600")}}
+           :content [:span {:class (:accent-color classes)}
                      feels-like]
            :render? true}
-          {:content [:span {:style {:color (get accent-scheme "600")}}
+          {:content [:span {:class (:accent-color classes)}
                      humidity [:i {:class "wi wi-humidity"}]]
            :render? true}
           {:postfix " rain"
-           :content [:span {:style {:color (get accent-scheme "600")}} rain]
+           :content [:span {:class (:accent-color classes)} rain]
            :render? rain}
           {:postfix " snow"
-           :content [:span {:style {:color "red"}} snow]
+           :content [:span {:class (:alert-color classes)} snow]
            :render? snow}]
          (map (fn [{:keys [prefix postfix content render?]}]
                 (if render?
@@ -194,8 +215,9 @@
             :justify "center" :alignItems "center"}
    [:> Grid {:item true :xs 3}
     [:> Typography {:variant "h1"}
-     [:i {:class (str "wi wi-" @(re-frame/subscribe [::weather/icon]))
-          :style {:color (get color-scheme "400")}}]]]
+     [:i {:class (str "wi wi-"
+                      @(re-frame/subscribe [::weather/icon])
+                      " "(:highlight-color classes))}]]]
    [:> GridCenter {:item true :xs 5}
     [:> Typography {:align "center" :variant "h1"
                     :display "inline"}
@@ -217,16 +239,15 @@
                        :align "center"}
         weekday]
        [:> Typography {:align "center" :variant "h5"}
-        [:i {:class (str "wi wi-" icon)
-             :style {:color (get accent-scheme "600")}}]]
+        [:i {:class (str "wi wi-" icon " " (:accent-color classes))}]]
        [:> Typography {:align "center" :variant "subtitle2"}
         high
         (gstring/unescapeEntities "&#8194;")
-        [:span {:style {:color "rgb(132, 132, 132)"}} low]
-        [:span {:style {:color (get accent-scheme "600")}}
+        [:span {:class (:text-secondary classes)} low]
+        [:span {:class (:accent-color classes)}
          (when rain
            [:<> [:br] (list " " rain)])]
-        [:span {:style {:color "red"}}
+        [:span {:class (:alert-color classes)}
          (when snow
            [:<>
             (list " " snow)])]]])
@@ -244,8 +265,8 @@
      {:on-click
       (fn [_] (re-frame/dispatch [::weather/fetch-weather]))}
      [:> RefreshIcon]]
-    [:div {:style {:width "100%"}}
-     [:div {:style {:float "right"}}
+    [:div {:class (:right-aligned classes)}
+     [:div
       [:> Typography {:variant "body2" :color "textSecondary"}
        @(re-frame/subscribe [::weather/weather-update-time])]]]]])
 
@@ -333,8 +354,7 @@
                        (if (> minutes 0)
                          [:<> minutes
                           [:span
-                           {:style
-                            {:color "rgba(0,0,0,0.54)"}} "m "]]
+                           {:class (:text-secondary classes)} "m "]]
                          "Now ")]])]]))
               (take 4))
 
@@ -350,8 +370,8 @@
                        config/transit-stop-whitelist)]
           (re-frame/dispatch event)))}
      [:> RefreshIcon]]
-    [:div {:style {:width "100%"}}
-     [:div {:style {:float "right"}}
+    [:div {:class (:right-aligned classes)}
+     [:div
       [:> Typography {:variant "body2" :color "textSecondary"}
        @(re-frame/subscribe [::transit/stop-times-update-interval])]]]]])
 
