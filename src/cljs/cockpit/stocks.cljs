@@ -61,7 +61,7 @@
     ;; Start with today and move both backwards by a day at a time
     ;; until we find the last trading day. This handles
     ;; weekend/holiday gaps, and past-midnight-but-before-open dates.
-    (loop [trading-day (time/today)]
+    (loop [trading-day (time/today) limit 7]
       (let [trading-data (->> full-list
                               (filter #(-> % :date (= (date->str trading-day))))
                               (sort-by :time))
@@ -72,7 +72,8 @@
           (->> (concat [prev-close] trading-data)
                (map :value)
                vec)
-          (recur (prev-day trading-day)))))))
+          (when (pos? limit)
+            (recur (prev-day trading-day) (dec limit))))))))
 
 (re-frame/reg-sub
  ::stocks
@@ -85,6 +86,7 @@
  (fn [stocks _]
    ;; TODO: a bit annoying to have to dissoc this
    (->> (dissoc stocks :update-time)
+        (remove nil?)
         (map (fn [[symbol api-result]]
                [symbol (convert-alpha-vantage-to-sparkline api-result)]))
         (into {}))))
