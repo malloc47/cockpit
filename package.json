@@ -7,12 +7,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-highlight.js": "1.0.7",
-    "react-sparklines": "1.7.0",
-    "react-vega": "7.3.0",
-    "vega": "5.12.3",
-    "vega-embed": "6.8.0",
-    "vega-lite": "4.12.2",
-    "vega-util": "1.14.0"
+    "react-sparklines": "1.7.0"
   },
   "devDependencies": {
     "karma": "4.4.1",

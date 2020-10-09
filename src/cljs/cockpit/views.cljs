@@ -2,7 +2,6 @@
   (:require
    [cockpit.clock :as clock]
    [cockpit.config :as config]
-   [cockpit.covid :as covid]
    [cockpit.events :as events]
    [cockpit.stocks :as stocks]
    [cockpit.transit :as transit]
@@ -27,8 +26,7 @@
    ["@material-ui/core/colors/green" :default green]
    ["@material-ui/core/colors/lightBlue" :default lightBlue]
    ["react-sparklines" :refer [Sparklines SparklinesLine
-                               SparklinesReferenceLine]]
-   ["react-vega" :refer [VegaLite]]))
+                               SparklinesReferenceLine]]))
 
 (.use jss (jssNested))
 
@@ -270,46 +268,6 @@
       [:> Typography {:variant "body2" :color "textSecondary"}
        @(re-frame/subscribe [::weather/weather-update-time])]]]]])
 
-(defn covid []
-  [:> FixedHeightCard
-   [:> CardContentThin
-    (when-let [data @(re-frame/subscribe [::covid/covid-rows])]
-      [:<>
-       [:> VegaLite {:actions false
-                     :spec {:width    "container"
-                            :height   130
-                            :mark     {:type "line"}
-                            :encoding
-                            {:x {:field "date"
-                                 :type "temporal"
-                                 :axis {:title nil
-                                        :grid  false}}
-                             :y {:field "y"
-                                 :type "quantitative"
-                                 :axis {:title nil
-                                        :grid  false}
-                                 :range [0,nil]
-                                 :scale {:type "sqrt"}}
-                             :color {:field "type" :type "nominal"
-                                     :legend
-                                     {:orient "top"
-                                      :title nil
-                                      :symbolType "circle"}}}
-                            :autosize {:resize true}
-                            :data
-                            {:name "table"
-                             :format
-                             {:parse
-                              {:date_of_interest "date:'%Y-%m-%dT%H:%M:%S.%L'"}}}}
-                     :data {:table data}
-                     :style {:width "100%"}}]
-       [:> Typography {:variant "h5"
-                       :color "textSecondary"}
-        "Total Cases: " (->> data
-                             (filter #(= (:type %) "cases"))
-                             last
-                             :y)]])]])
-
 (def direction-id->arrow
   {"0" "▲"
    "1" "▼"
@@ -388,6 +346,4 @@
 
        [:> Grid card-opts [transit]]
 
-       [:> Grid card-opts [stocks]]
-
-       [:> Grid card-opts [covid]]]]]))
+       [:> Grid card-opts [stocks]]]]]))
