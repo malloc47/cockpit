@@ -58,40 +58,40 @@
   [component css]
   ((styled component) (clj->js css)))
 
-(def ^:const FixedHeightCard
+(def FixedHeightCard
   ;; Customize to get more than 2 cards on a screen
   (style Card {:height "48vh"}))
 
-(def ^:const CardContentWithFooter
+(def CardContentWithFooter
   (style CardContent
          {:padding-bottom "0px"
           :padding-top "2px"
           :overflow "auto"
           :height "calc(100% - 35px)"}))
 
-(def ^:const CardContentThin
+(def CardContentThin
   (style CardContent
          {:padding-top "2px"
           :overflow "auto"}))
 
-(def ^:const CardActionsThin
+(def CardActionsThin
   (style CardActions
          {:padding-bottom "0px"
           :padding-top "0px"}))
 
-(def ^:const IconButtonSmall
+(def IconButtonSmall
   (style IconButton {:padding "5px"}))
 
-(def ^:const TypographyNoWrap
+(def TypographyNoWrap
   (style Typography {:white-space "nowrap"}))
 
-(def ^:const TypographyFloatRight
+(def TypographyFloatRight
   (style Typography {:float "right"}))
 
-(def ^:const TypographyH5Point5
+(def TypographyH5Point5
   (style Typography {:font-size "1.9rem"}))
 
-(def ^:const GridCenter
+(def GridCenter
   ;; Customize to get more than 2 cards on a screen
   (style Grid {:text-align "center"}))
 
