@@ -6,7 +6,7 @@
 (def open-weather-api-key
   "")
 
-(def alpha-vantage-api-key
+(def iex-api-key
   "")
 
 (def home

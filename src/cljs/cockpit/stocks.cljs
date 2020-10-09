@@ -11,37 +11,6 @@
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
 
-;;; Events
-
-(re-frame/reg-event-db
- ::stocks
- (fn [db [_ result]]
-   (let [symbol (-> result
-                    (get "Meta Data")
-                    (get "2. Symbol"))]
-     (-> db
-         (assoc-in [:stocks (keyword symbol)] result)
-         (assoc-in [:stocks :update-time] (js/Date.))))))
-
-(re-frame/reg-event-fx
- ::fetch-stocks
- (fn [_ [_ symbol]]
-   {:http-xhrio
-    {:method          :get
-     :uri             "https://www.alphavantage.co/query"
-     :params          {:function   "TIME_SERIES_INTRADAY"
-                       :symbol     symbol
-                       :interval   "5min"
-                       :outputsize "compact"
-                       :apikey     config/alpha-vantage-api-key}
-     :response-format (ajax/json-response-format {:keywords? false})
-     :on-success      [::stocks]
-     ;; TODO: this nukes the whole payload even if one of the queries
-     ;; is successful
-     :on-failure      [::events/http-fail [:stocks]]}}))
-
-;;; Subs
-
 (defn date->str
   [date]
   (time-format/unparse (time-format/formatters :date) date))
@@ -50,30 +19,70 @@
   [date]
   (->> 1 time/days (time/minus date)))
 
-(defn convert-alpha-vantage-to-sparkline
-  [av]
-  (let [full-list
-        (->> (get av "Time Series (5min)")
-             (map (fn [[k v]]
-                    {:date (subs k 0 10)
-                     :time (.parse js/Date k)
-                     :value (js/parseFloat (get v "4. close"))})))]
-    ;; Start with today and move both backwards by a day at a time
-    ;; until we find the last trading day. This handles
-    ;; weekend/holiday gaps, and past-midnight-but-before-open dates.
-    (loop [trading-day (time/today) limit 7]
-      (let [trading-data (->> full-list
-                              (filter #(-> % :date (= (date->str trading-day))))
-                              (sort-by :time))
-            prev-close   (->> full-list
-                              (remove #(-> % :date (= (date->str trading-day))))
-                              (apply max-key :time))]
-        (if (not-empty trading-data)
-          (->> (concat [prev-close] trading-data)
-               (map :value)
-               vec)
-          (when (pos? limit)
-            (recur (prev-day trading-day) (dec limit))))))))
+;;; Events
+
+(re-frame/reg-event-fx
+ ::persist-stocks
+ (fn [{:keys [db]} [_ symbol result]]
+   (let [prev  (->> result (map :date) distinct first
+                    time-format/parse prev-day date->str)
+         cache (-> db :stocks (get symbol) :previous-close :date)]
+     {:db (-> db
+              (assoc-in [:stocks (keyword symbol) :data] result)
+              (assoc-in [:stocks :update-time] (js/Date.)))
+      :dispatch-n (if (= cache prev) (list) (list [::fetch-prev-close symbol]))})))
+
+(re-frame/reg-event-db
+ ::persist-prev-close
+ (fn [db [_ symbol result]]
+   ;; TODO: This will grow without bound until the page is closed
+   (assoc-in db [:stocks (keyword symbol) :previous-close] result)))
+
+(re-frame/reg-event-fx
+ ::fetch-stocks
+ (fn [_ [_ symbol]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str "https://cloud.iexapis.com/stable/stock/"
+                           symbol "/"
+                           "intraday-prices")
+     :params          {:token config/iex-api-key}
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::persist-stocks symbol]
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::events/http-fail [:stocks]]}}))
+
+(re-frame/reg-event-fx
+ ::fetch-prev-close
+ (fn [_ [_ symbol]]
+   {:http-xhrio
+    {:method          :get
+     :uri             (str "https://cloud.iexapis.com/stable/stock/"
+                           symbol "/"
+                           "previous")
+     :params          {:token config/iex-api-key}
+     :response-format (ajax/json-response-format {:keywords? true})
+     :on-success      [::persist-prev-close symbol]
+     ;; TODO: this nukes the whole payload even if one of the queries
+     ;; is successful
+     :on-failure      [::events/http-fail [:stocks]]}}))
+
+;;; Subs
+
+(defn convert-iex-to-sparkline
+  [iex-list]
+  (let [intraday
+        (->> iex-list
+             rest
+             (remove (comp zero? :numberOfTrades))
+             (map (fn [{:keys [date minute] :as iex}]
+                    (->> (str date " " minute)
+                         (.parse js/Date)
+                         (assoc iex :timestamp))))
+             (sort-by :timestamp))]
+    (concat [(-> iex-list first :close)]
+            (map :close intraday))))
 
 (re-frame/reg-sub
  ::stocks
@@ -87,8 +96,9 @@
    ;; TODO: a bit annoying to have to dissoc this
    (->> (dissoc stocks :update-time)
         (remove nil?)
-        (map (fn [[symbol api-result]]
-               [symbol (convert-alpha-vantage-to-sparkline api-result)]))
+        (map (fn [[symbol {:keys [data previous-close]}]]
+               [symbol (convert-iex-to-sparkline
+                        (concat [previous-close] data))]))
         (into {}))))
 
 (re-frame/reg-sub
