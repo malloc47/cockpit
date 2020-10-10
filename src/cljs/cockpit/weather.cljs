@@ -7,8 +7,7 @@
    [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.events :as events]
-   [cockpit.utils :refer [round-nonzero]]
-   [cockpit.utils :refer [safe-interval format-interval]]
+   [cockpit.utils :refer [format-interval round-nonzero safe-interval]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))
 

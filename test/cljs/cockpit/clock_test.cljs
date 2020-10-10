@@ -12,7 +12,7 @@
    (is (instance? js/Date @(re-frame/subscribe [::clock/clock])))))
 
 (deftest date-time-display
-  (reset! re-frame.db/app-db {:clock (js/Date. 1500000000000)})
+  (reset! app-db {:clock (js/Date. 1500000000000)})
   (is (= "Thursday, July 13" @(re-frame/subscribe [::clock/day])))
   (is (= "7:40 PM" @(re-frame/subscribe [::clock/time-pt])))
   (is (= "9:40 PM" @(re-frame/subscribe [::clock/time-ct]))))

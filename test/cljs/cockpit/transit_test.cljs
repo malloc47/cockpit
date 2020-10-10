@@ -6,7 +6,8 @@
    [cockpit.transit :as transit]
    [cockpit.transit-test-data :as data]
    [day8.re-frame.test :as rf-test]
-   [re-frame.core :as re-frame]))
+   [re-frame.core :as re-frame]
+   [re-frame.db :refer [app-db]]))
 
 (defn stub-http-fetch
   []
@@ -50,7 +51,7 @@
     (rf-test/run-test-sync
      (stub-http-fetch)
 
-     (reset! re-frame.db/app-db
+     (reset! app-db
              {:clock
               (clock-time-relative-to-first-stop-time -60000)})
 
@@ -101,7 +102,7 @@
              "Stop times are enriched with joined route and stop")))
 
      (testing "Interval calculation"
-       (swap! re-frame.db/app-db
+       (swap! app-db
               #(assoc % :clock
                       ;; Roll time back an hour
                       (clock-time-relative-to-first-stop-time (* -60 60 1000))))
@@ -121,7 +122,7 @@
     (rf-test/run-test-sync
      (stub-http-fetch)
 
-     (reset! re-frame.db/app-db
+     (reset! app-db
              {:clock
               ;; This doesn't matter for the fallback
               (clock-time-relative-to-first-stop-time -60000)})

@@ -166,7 +166,7 @@
 
 (re-frame/reg-event-fx
  ::fetch-stop
- (fn [_ [_ {:keys [stop-id] :as stop}]]
+ (fn [_ [_ {:keys [stop-id]}]]
    {:http-xhrio
     (merge
      otp-request

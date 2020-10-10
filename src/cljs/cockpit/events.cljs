@@ -1,7 +1,5 @@
 (ns cockpit.events
   (:require
-   [ajax.core :as ajax]
-   [cockpit.config :as config]
    [cockpit.db :as db]
    [day8.re-frame.http-fx]
    [day8.re-frame.tracing :refer-macros [fn-traced]]

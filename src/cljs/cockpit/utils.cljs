@@ -22,7 +22,7 @@
   [a b]
   (try
     (time/interval a b)
-    (catch js/Object e
+    (catch js/Object _
       (time/interval b b))))
 
 (defn format-interval

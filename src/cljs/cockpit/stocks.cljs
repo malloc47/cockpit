@@ -4,9 +4,9 @@
    [cljs-time.coerce :as time-coerce]
    [cljs-time.core :as time]
    [cljs-time.format :as time-format]
+   [cockpit.clock :as clock]
    [cockpit.config :as config]
    [cockpit.events :as events]
-   [cockpit.clock :as clock]
    [cockpit.utils :refer [safe-interval format-interval]]
    [day8.re-frame.http-fx]
    [re-frame.core :as re-frame]))

@@ -2,11 +2,9 @@
   (:require
    [cockpit.clock :as clock]
    [cockpit.config :as config]
-   [cockpit.events :as events]
    [cockpit.stocks :as stocks]
    [cockpit.transit :as transit]
-   [cockpit.weather :as weather]
-   [clojure.string :as str]))
+   [cockpit.weather :as weather]))
 
 (def rules
   (vec

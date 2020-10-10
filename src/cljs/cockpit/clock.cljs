@@ -6,7 +6,7 @@
 
 (re-frame/reg-event-db
  ::timer
- (fn [db [_ new-time]]
+ (fn [db [_ _2]]
    (assoc db :clock (js/Date.))))
 
 ;;; Subs

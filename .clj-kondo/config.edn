@@ -12,4 +12,5 @@
                                                       find-doc
                                                       print-doc
                                                       pst
-                                                      source]}}}}
+                                                      source]}}
+           :unsorted-required-namespaces {:level :on}}}
