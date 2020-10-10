@@ -26,7 +26,8 @@
  (fn [{:keys [db]} [_ symbol result]]
    (let [prev  (->> result (map :date) distinct first
                     time-format/parse prev-day date->str)
-         cache (-> db :stocks (get symbol) :previous-close :date)]
+         cache (-> db :stocks (get (keyword symbol))
+                   :previous-close :date)]
      {:db (-> db
               (assoc-in [:stocks (keyword symbol) :data] result)
               (assoc-in [:stocks :update-time] (js/Date.)))
