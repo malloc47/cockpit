@@ -13,4 +13,4 @@
                                                       print-doc
                                                       pst
                                                       source]}}
-           :unsorted-required-namespaces {:level :on}}}
+           :unsorted-required-namespaces {:level :info}}}
