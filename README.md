@@ -1,9 +1,11 @@
 # cockpit
 
-A [re-frame](https://github.com/day8/re-frame) application designed to ... well, that part is up to
-you.
+Dashboard webapp for display on a wall-mounted tablet or screen.
 
 ## Getting Started
+
+Discussed in detail in [this blog
+series](https://www.malloc47.com/building-a-personal-dashboard-in-clojurescript).
 
 ### Project Overview
 
