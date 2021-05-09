@@ -22,20 +22,13 @@
 (def transit-stop-whitelist
   [{:agency-id    "MTASBWY"
     :stop-id      "MTASBWY:625N"
-    :direction-id "0"
-    :fallback?    true}
+    :direction-id "0"}
    {:agency-id    "MTASBWY"
     :stop-id      "MTASBWY:625S"
-    :direction-id "1"
-    :fallback?    true}])
+    :direction-id "1"}])
 
 (def otp-api-key
   "")
 
 (def otp-uri
   "https://otp-mta-prod.camsys-apps.com/otp")
-
-(def fallback-agency "MTASBWY")
-
-(def fallback-uri
-  "http://traintimelb-367443097.us-east-1.elb.amazonaws.com/getTime/")

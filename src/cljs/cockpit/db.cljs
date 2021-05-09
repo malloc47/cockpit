@@ -8,5 +8,4 @@
    :transit          {:stops        {}
                       :stop-times   {}
                       :routes       {}
-                      :update-times {}}
-   :transit-fallback {:stop-times {}}})
+                      :update-times {}}})

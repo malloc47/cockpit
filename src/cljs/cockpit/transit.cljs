@@ -14,87 +14,6 @@
    [plumbing.core :refer [map-vals]]
    [re-frame.core :as re-frame]))
 
-;;; Fallback flow specific to MTA
-
-(defn split-stop-id
-  [stop-id]
-  (let [[_ agency-id stop-alias line direction]
-        (re-find #"(\w+):((\w)\w+)(\w)" stop-id)]
-    {:agency-id  agency-id
-     :stop-alias stop-alias
-     :line       line
-     :direction  direction}))
-
-(defn fallback->route-ids
-  [fallback]
-  (->> fallback
-       ((juxt :direction1 :direction2))
-       (mapcat :times)
-       (map :route)
-       distinct
-       (map (partial str config/fallback-agency ":"))))
-
-(def headsign->direction
-  {"Downtown" "S"
-   "Uptown" "N"})
-
-(def direction->direction-id
-  {"S" "1"
-   "N" "0"})
-
-(defn fallback->stoptimes
-  [{:keys [agency-id] :as stop} {:keys [direction1 direction2]}]
-  (->> [direction1 direction2]
-       (mapcat
-        (fn [{:keys [name times]}]
-          (let [direction (get headsign->direction name)
-                ;; reconstruct this id because we fetched both and
-                ;; need to append the direction to the ID
-                stop-id (str (->> stop :stop-id first drop-last
-                                  (str/join ""))
-                             direction)]
-            (map (fn [{:keys [route minutes]}]
-                   {:minutes        minutes
-                    :stop-id        stop-id
-                    :route-id       (str agency-id ":" route)
-                    :realtime-state "SCHEDULED"
-                    :realtime?      true
-                    :direction-id   (get direction->direction-id direction)})
-                 times))))))
-
-(re-frame/reg-event-fx
- ::fetch-stop-times-fallback
- (fn [_ [_ {:keys [stop-id] :as stop}]]
-   (let [{:keys [stop-alias line]}
-         (split-stop-id (cond-> stop-id (sequential? stop-id) first))]
-     {:http-xhrio
-      {:method          :get
-       :uri             (str config/fallback-uri
-                             line
-                             "/"
-                             stop-alias)
-       :response-format (ajax/json-response-format {:keywords? true})
-       ;; :id will be an array and the payload will be duplicated in the
-       ;; db which will match the shape of the OTP-based transit query
-       ;; which is separated by direction
-       :on-success      [::persist-stop-times
-                         [:transit-fallback :stop-times stop]]
-       :on-failure      [::events/http-fail
-                         [:transit-fallback :stop-times stop]]}})))
-
-(re-frame/reg-sub
- ::stop-times-raw-fallback
- (fn [db _]
-   (-> db :transit-fallback :stop-times)))
-
-(re-frame/reg-sub
- ::stop-times-fallback
- :<- [::stop-times-raw-fallback]
- (fn [stop-times _]
-   (mapcat (fn [[stop times]]
-             (fallback->stoptimes stop times))
-           stop-times)))
-
 ;;; Open Trip Planner (OTP) index API
 ;;;
 ;;; http://dev.opentripplanner.org/apidoc/1.4.0/resource_IndexAPI.html
@@ -187,11 +106,7 @@
  ::persist-stop-times
  (fn [{:keys [db]} [_ key-path stop-times]]
    (let [existing-route-ids (-> db :transit :routes keys set)
-         ;; make this function work on the normal GTFS payload
-         ;; (vector) or the fallback payload (map)
-         new-route-ids      (set (if (sequential? stop-times)
-                                   (map gtfs->route-id stop-times)
-                                   (fallback->route-ids stop-times)))
+         new-route-ids      (->> stop-times (map gtfs->route-id) set)
          ;; diff what is in the DB with the newly-seen routes so we
          ;; only fetch them once
          route-ids          (->> (difference new-route-ids
@@ -210,40 +125,13 @@
 (re-frame/reg-event-db
  ::clear
  (fn [db _]
-   (-> db
-       (assoc :transit (:transit db/default-db))
-       (assoc :transit-fallback (:transit-fallback db/default-db)))))
+   (assoc db :transit (:transit db/default-db))))
 
 (defn generate-stop-time-events
   [config]
-  (->> config
-       (filter (comp not :fallback?))
-       (map (fn [stop]
-              [::fetch-stop-times stop]))))
-
-(defn generate-fallback-stop-time-events
-  [config]
-  (->> config
-       (filter :fallback?)
-       ;; create a key without the direction for grouping
-       (map #(assoc % :stop (->> %
-                                 :stop-id
-                                 drop-last
-                                 (str/join ""))
-                    :stop-id (list (:stop-id %))))
-       ;; ignore the other keys
-       (group-by (juxt :agency-id :stop))
-       vals
-       (map (partial
-             reduce
-             (fn [a b]
-               (let [c (merge a b)]
-                 (-> c
-                     ;; merge :id key into a list of ids
-                     (assoc :stop-id (concat (:stop-id a) (:stop-id b)))
-                     (dissoc :stop))))))
-       (map (fn [stop]
-              [::fetch-stop-times-fallback stop]))))
+  (map (fn [stop]
+         [::fetch-stop-times stop])
+       config))
 
 (defn generate-stop-events
   [config]
@@ -255,7 +143,6 @@
   [config]
   (concat
    (generate-stop-time-events config)
-   (generate-fallback-stop-time-events config)
    (generate-stop-events config)))
 
 ;;; Subscriptions
@@ -343,14 +230,6 @@
               (apply max-key time/in-minutes)
               format-interval))))
 
-(re-frame/reg-sub
- ::stop-times-joined
- :<- [::stop-times]
- ;; Injects the fallback into the main transit subscription flow
- :<- [::stop-times-fallback]
- (fn [stop-time-groups _]
-   (apply concat stop-time-groups)))
-
 (defn roll-up-route
   "This rolls up multiple routes from individual stops into a single
   aggregate route. This is useful for cases where we don't care which
@@ -382,7 +261,7 @@
 
 (re-frame/reg-sub
  ::stop-times-processed
- :<- [::stop-times-joined]
+ :<- [::stop-times]
  :<- [::routes]
  :<- [::stops]
  (fn [[stop-times routes stops] _]

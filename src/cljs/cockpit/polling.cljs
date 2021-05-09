@@ -24,11 +24,8 @@
            {:interval                 30
             :event                    event
             :dispatch-event-on-start? true})
-         (concat
-          (transit/generate-stop-time-events
-           config/transit-stop-whitelist)
-          (transit/generate-fallback-stop-time-events
-           config/transit-stop-whitelist)))
+         (transit/generate-stop-time-events
+          config/transit-stop-whitelist))
     (map (fn [event]
            {:interval                 604800 ; 1 week
             :event                    event

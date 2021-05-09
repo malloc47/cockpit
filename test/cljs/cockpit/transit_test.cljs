@@ -24,11 +24,7 @@
               data/stop-payload
 
               (str/includes? uri "/routes/")
-              data/route-payload
-
-              ;; Fallback URI
-              (str/includes? uri "/getTime/")
-              data/fallback-payload))))))
+              data/route-payload))))))
 
 (defn clock-time-relative-to-first-stop-time
   [offset]
@@ -112,57 +108,3 @@
                 count
                 zero?)
            "No stop times are returned if they are all greater than an hour")))))
-
-(deftest transit-fallback
-  (with-redefs [config/transit-stop-whitelist
-                 [{:agency-id    "MTASBWY"
-                   :stop-id      "MTASBWY:142N"
-                   :direction-id "0"
-                   :fallback?    true}]]
-    (rf-test/run-test-sync
-     (stub-http-fetch)
-
-     (reset! app-db
-             {:clock
-              ;; This doesn't matter for the fallback
-              (clock-time-relative-to-first-stop-time -60000)})
-
-     (re-frame/dispatch [::transit/fetch-stop {:stop-id "MTASBWY:142N"}])
-     ;; Should also fetch routes
-     (re-frame/dispatch [::transit/fetch-stop-times-fallback
-                         {:agency-id    "MTASBWY"
-                          :stop-id      ["MTASBWY:142N"]
-                          :direction-id "0"}])
-
-     (testing "Raw data is populated"
-       (is (= #{"MTASBWY:142N"}
-              (->> @(re-frame/subscribe [::transit/stops])
-                   vals
-                   (map :stop-id)
-                   set))
-           "Stops were fetched")
-
-       (is (= #{"MTASBWY:1"}
-              (->> @(re-frame/subscribe [::transit/routes])
-                   vals
-                   (map :route-id)
-                   set))
-           "Routes were fetched when processing stop times")
-
-       (is (= 8 (count @(re-frame/subscribe [::transit/stop-times-fallback])))
-           "Returns all the stop times for the stop"))
-
-     (js/console.log @(re-frame/subscribe [::transit/stop-times-joined]))
-
-     (testing "Stop times processing"
-       (let [stop-times
-             (->> @(re-frame/subscribe [::transit/stop-times-processed])
-                  first
-                  second)]
-         (is (= 4 (count stop-times))
-             "View returns only stop times in the configured direction")
-
-         (is (every? (fn [{:keys [stop route]}]
-                       (and (some? stop) (some? route)))
-                     stop-times)
-             "Stop times are enriched with joined route and stop"))))))
