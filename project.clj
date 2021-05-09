@@ -73,7 +73,7 @@
                             ["shell" "open" "target/build-report.html"]]
             "karma"        ["with-profile" "prod" "do"
                             ["shadow" "compile" "karma-test"]
-                            ["shell" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
+                            ["shell" "npx" "karma" "start" "--single-run" "--reporters" "junit,dots"]]}
 
   :profiles
   {:dev
