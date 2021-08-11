@@ -4,6 +4,7 @@
   {:clock            (js/Date.)
    :stocks           {}
    :weather          {}
+   :webcam           {:url nil}
    :covid            nil
    :transit          {:stops        {}
                       :stop-times   {}

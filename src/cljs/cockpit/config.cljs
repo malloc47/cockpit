@@ -32,3 +32,6 @@
 
 (def otp-uri
   "https://otp-mta-prod.camsys-apps.com/otp")
+
+(def webcam-link
+  "")

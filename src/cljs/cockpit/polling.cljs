@@ -4,6 +4,7 @@
    [cockpit.config :as config]
    [cockpit.stocks :as stocks]
    [cockpit.transit :as transit]
+   [cockpit.webcam :as webcam]
    [cockpit.weather :as weather]))
 
 (def rules
@@ -12,7 +13,10 @@
     [{:interval                 1
       :event                    [::clock/timer]
       :dispatch-event-on-start? true}
-     {:interval                 900 ; 15 minutes
+     {:interval                 1
+      :event                    [::webcam/update-image]
+      :dispatch-event-on-start? true}
+     {:interval                 900     ; 15 minutes
       :event                    [::weather/fetch-weather]
       :dispatch-event-on-start? true}]
     (map (fn [sym]

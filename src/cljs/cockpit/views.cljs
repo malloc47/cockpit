@@ -5,6 +5,7 @@
    [cockpit.stocks :as stocks]
    [cockpit.transit :as transit]
    [cockpit.utils :refer [round]]
+   [cockpit.webcam :as webcam]
    [cockpit.weather :as weather]
    [goog.string :as gstring]
    [re-frame.core :as re-frame]
@@ -163,7 +164,7 @@
 
 (defn stocks []
   [:> FixedHeightCard
-   [:> CardContentWithFooter
+   [:> CardContentThin
     (into
      [:<>]
      (vec (map (fn [sym] [stock-chart (keyword sym)]) config/stocks)))]
@@ -178,6 +179,13 @@
      [:div
       [:> Typography {:variant "body2" :color "textSecondary"}
        @(re-frame/subscribe [::stocks/stocks-update-time])]]]]])
+
+(defn webcam []
+  [:> FixedHeightCard
+   [:> CardContentWithFooter
+    [:img {:src @(re-frame/subscribe [::webcam/url])
+           :width "100%"
+           :style {:margin "-50px 0 0 0"}}]]])
 
 (defn weather-description []
   (let [{:keys [humidity feels-like description rain snow]}
@@ -344,4 +352,4 @@
 
        [:> Grid card-opts [transit]]
 
-       [:> Grid card-opts [stocks]]]]]))
+       [:> Grid card-opts [webcam]]]]]))
